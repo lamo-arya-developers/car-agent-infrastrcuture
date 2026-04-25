@@ -42,9 +42,9 @@ module "iam_lambda" {
   env = var.environment
   ecr_arn = module.ecr_lambda.ecr_lambda_repo_arn
   s3_arn = module.s3.s3_arn
-  dynamodb_arn = module.dynamodb.dynamodb_arn
+  dynamodb_arn = module.dynamodb.table_arn
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
-  
+
 }
 
 #### COMPUTE RESOURCES ####
@@ -52,7 +52,7 @@ module "orchestrator_lambda" {
   source = "./resources/compute/orchestrator-lambda"
   env = var.environment
   s3_name = module.s3.s3_name
-  dynamodb_name = module.dynamodb.dynamodb_name
+  dynamodb_name = module.dynamodb.table_name
   ecr_url = module.ecr_lambda.ecr_lambda_repo_url
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.orchestrator_role_arn
