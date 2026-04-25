@@ -54,9 +54,9 @@ jobs:
         id: ecr
         run: |
           terraform apply -auto-approve \
-            -target=aws_ecr_repository.orchestrator_lambda \
+            -target=module.ecr_lambda \
             -var-file="${{ inputs.environment }}.tfvars"
-          ECR_URL=$(terraform output -raw ecr_url)
+          ECR_URL=$(terraform output -raw ecr_lambda_url)
           echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
 
       - name: Push placeholder image
@@ -67,7 +67,7 @@ jobs:
           docker pull public.ecr.aws/lambda/python:3.12
           docker tag public.ecr.aws/lambda/python:3.12 "${ECR_URL}:latest"
           docker push "${ECR_URL}:latest"
-          
+
       - name: Terraform Apply to Prod
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -var-file="${{ inputs.environment }}.tfvars"
