@@ -2,7 +2,6 @@ resource "aws_lambda_function" "orchestrator" {
   function_name = var.env == "prod" ? "car-agent-lambda-prod" : "car-agent-lambda-dev"
   role          = var.lambda_execution_role_arn
   timeout = 300
-  runtime       = "python3.12"
   package_type = "Image"
   memory_size = 1024
 
