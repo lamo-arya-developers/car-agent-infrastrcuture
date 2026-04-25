@@ -33,18 +33,17 @@ module "cloudwatch" {
   env = var.environment
 }
 module "ecr_lambda" {
-  source = "./resources/storage/ecr_lambda"
+  source = "./resources/storage/ecr-lambda"
   env = var.environment
 }
 #### SECURITY RESOURCES ####
 module "iam_lambda" {
-  source = "./resources/security/iam_lambda"
+  source = "./resources/security/iam-lambda"
   env = var.environment
   ecr_arn = module.ecr_lambda.ecr_lambda_repo_arn
   s3_arn = module.s3.s3_arn
   dynamodb_arn = module.dynamodb.table_arn
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
-
 }
 
 #### COMPUTE RESOURCES ####
@@ -55,7 +54,7 @@ module "orchestrator_lambda" {
   dynamodb_name = module.dynamodb.table_name
   ecr_url = module.ecr_lambda.ecr_lambda_repo_url
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
-  lambda_execution_role_arn = module.iam_lambda.orchestrator_role_arn
+  lambda_execution_role_arn = module.iam-lambda.orchestrator_role_arn
 }
 
 #### NETWORKING RESOURCES ####

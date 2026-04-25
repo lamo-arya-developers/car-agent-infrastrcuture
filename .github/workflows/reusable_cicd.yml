@@ -50,7 +50,7 @@ jobs:
       - name: Terraform Plan ECR
         run: |
           terraform plan \
-            -target=module.ecr_lambda \
+            -target=module.ecr-lambda \
             -var-file="${{ inputs.environment }}.tfvars"
 
       - name: Terraform Apply ECR
@@ -58,7 +58,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           terraform apply -auto-approve \
-            -target=module.ecr_lambda \
+            -target=module.ecr-lambda \
             -var-file="${{ inputs.environment }}.tfvars"
           ECR_URL=$(terraform output -raw ecr_lambda_url)
           echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
