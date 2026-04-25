@@ -11,7 +11,9 @@ on:
 jobs:
   terraform:
     uses: ./.github/workflows/reusable-cicd.yml
-
+    permissions:
+      id-token: write
+      contents: read
     with:
       working_directory: .
       environment: prod
