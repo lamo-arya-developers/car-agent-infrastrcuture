@@ -54,7 +54,7 @@ module "orchestrator_lambda" {
   dynamodb_name = module.dynamodb.table_name
   ecr_url = module.ecr_lambda.ecr_lambda_repo_url
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
-  lambda_execution_role_arn = module.iam-lambda.orchestrator_role_arn
+  lambda_execution_role_arn = module.iam_lambda.orchestrator_role_arn
 }
 
 #### NETWORKING RESOURCES ####
