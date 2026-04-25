@@ -4,7 +4,7 @@ resource "aws_lambda_function" "orchestrator" {
   timeout = 300
   handler       = "orchestrator.orchestrator_script"
   runtime       = "python3.12"
-  package_type = "image"
+  package_type = "Image"
   memory_size = 1024
 
   logging_config {
