@@ -47,25 +47,31 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan ECR
-        run: |
-          terraform plan \
-            -target=module.ecr-lambda \
-            -var-file="${{ inputs.environment }}.tfvars"
-
       - name: Terraform Apply ECR
         id: ecr
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           terraform apply -auto-approve \
-            -target=module.ecr-lambda \
+            -target=module.ecr_lambda \
+            -target=module.ecr_agentcore \
             -var-file="${{ inputs.environment }}.tfvars"
-          ECR_URL=$(terraform output -raw ecr_lambda_url)
-          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
+          echo "ecr_lambda_url=$(terraform output -raw ecr_lambda_url)" >> $GITHUB_OUTPUT
+          echo "ecr_agentcore_url=$(terraform output -raw ecr_agentcore_url)" >> $GITHUB_OUTPUT
 
-      - name: Push placeholder image
+      - name: Push placeholder image to Lambda ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          ECR_URL="${{ steps.ecr.outputs.ecr_url }}"
+          ECR_URL="${{ steps.ecr.outputs.ecr_lambda_url }}"
+          aws ecr get-login-password --region us-east-1 | \
+            docker login --username AWS --password-stdin $ECR_URL
+          docker pull public.ecr.aws/lambda/python:3.12
+          docker tag public.ecr.aws/lambda/python:3.12 "${ECR_URL}:latest"
+          docker push "${ECR_URL}:latest"
+
+      - name: Push placeholder image to AgentCore ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          ECR_URL="${{ steps.ecr.outputs.ecr_agentcore_url }}"
           aws ecr get-login-password --region us-east-1 | \
             docker login --username AWS --password-stdin $ECR_URL
           docker pull public.ecr.aws/lambda/python:3.12
