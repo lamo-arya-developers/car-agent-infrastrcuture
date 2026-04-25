@@ -1,0 +1,29 @@
+name: Terraform Apply ECR
+description: Deploys ECR repositories and outputs their URLs
+
+inputs:
+  environment:
+    required: true
+    description: Environment name
+
+outputs:
+  ecr_lambda_url:
+    description: Lambda ECR URL
+    value: ${{ steps.apply.outputs.ecr_lambda_url }}
+  ecr_agentcore_url:
+    description: AgentCore ECR URL
+    value: ${{ steps.apply.outputs.ecr_agentcore_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Apply ECR modules
+      id: apply
+      shell: bash
+      run: |
+        terraform apply -auto-approve \
+          -target=module.ecr_lambda \
+          -target=module.ecr_agentcore \
+          -var-file="${{ inputs.environment }}.tfvars"
+        echo "ecr_lambda_url=$(terraform output -raw ecr_lambda_url)" >> $GITHUB_OUTPUT
+        echo "ecr_agentcore_url=$(terraform output -raw ecr_agentcore_url)" >> $GITHUB_OUTPUT

@@ -1,0 +1,20 @@
+name: Push Placeholder Image
+description: Pushes a placeholder image to an ECR repository
+
+inputs:
+  ecr_url:
+    required: true
+    description: ECR repository URL
+
+runs:
+  using: composite
+  steps:
+    - name: Push image
+      shell: bash
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        aws ecr get-login-password --region us-east-1 | \
+          docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
+        docker pull public.ecr.aws/lambda/python:3.12
+        docker tag public.ecr.aws/lambda/python:3.12 "${{ inputs.ecr_url }}:latest"
+        docker push "${{ inputs.ecr_url }}:latest"
