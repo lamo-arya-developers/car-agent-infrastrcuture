@@ -10,7 +10,7 @@ on:
 
 jobs:
   terraform:
-    uses: ./.github/workflows/reusable-cicd.yml
+    uses: ./.github/workflows/reusable_cicd.yml
     permissions:
       id-token: write
       contents: read
