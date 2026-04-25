@@ -1,0 +1,20 @@
+name: Prod Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    uses: ./.github/workflows/reusable-cicd.yml
+
+    with:
+      working_directory: .
+      environment: prod
+
+    secrets:
+      OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN }}
