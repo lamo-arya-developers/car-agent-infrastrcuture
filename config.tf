@@ -36,6 +36,11 @@ module "ecr_lambda" {
   source = "./resources/storage/ecr-lambda"
   env = var.environment
 }
+module "ecr_agentcore" {
+  source = "./resources/storage/ecr-agentcore"
+  env = var.environment
+}
+
 #### SECURITY RESOURCES ####
 module "iam_lambda" {
   source = "./resources/security/iam-lambda"
