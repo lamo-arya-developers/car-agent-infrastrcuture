@@ -47,11 +47,15 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
-        run: terraform plan -var-file="${{ inputs.environment }}.tfvars"
+      - name: Terraform Plan ECR
+        run: |
+          terraform plan \
+            -target=module.ecr_lambda \
+            -var-file="${{ inputs.environment }}.tfvars"
 
       - name: Terraform Apply ECR
         id: ecr
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           terraform apply -auto-approve \
             -target=module.ecr_lambda \
@@ -67,6 +71,9 @@ jobs:
           docker pull public.ecr.aws/lambda/python:3.12
           docker tag public.ecr.aws/lambda/python:3.12 "${ECR_URL}:latest"
           docker push "${ECR_URL}:latest"
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="${{ inputs.environment }}.tfvars"
 
       - name: Terraform Apply to Prod
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
