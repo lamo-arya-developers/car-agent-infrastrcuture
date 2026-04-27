@@ -5,6 +5,12 @@ inputs:
   environment:
     required: true
     description: Environment name
+  google_client_id:
+    required: true
+    description: Google OAuth client ID
+  google_client_secret:
+    required: true
+    description: Google OAuth client secret
 
 outputs:
   ecr_orchestrator_lambda_url:
@@ -24,8 +30,8 @@ runs:
       id: apply
       shell: bash
       env:
-          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
-          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TF_VAR_google_client_id: ${{ inputs.google_client_id }}
+          TF_VAR_google_client_secret: ${{ inputs.google_client_secret }}
           # TF_VAR_facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
           # TF_VAR_facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
       run: |

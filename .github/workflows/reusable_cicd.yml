@@ -56,6 +56,10 @@ jobs:
         uses: ./.github/actions/terraform-apply-ecr
         with:
           environment: ${{ inputs.environment }}
+          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 
       - name: Push placeholder image to Lambda ECR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
