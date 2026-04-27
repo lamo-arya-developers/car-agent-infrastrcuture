@@ -23,7 +23,7 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
   name             = var.env == "prod" ? "car-agent-jwt-authorizer" : "car-agent-jwt-authorizer-dev"
 
   jwt_configuration {
-    audience = [var.cognito_client_id]
+    audience = [var.cognito_user_pool_client_id]
     issuer   = "https://cognito-idp.us-east-1.amazonaws.com/${var.cognito_user_pool_id}"
   }
 }

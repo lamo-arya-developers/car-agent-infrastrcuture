@@ -21,7 +21,7 @@ variable "cognito_user_pool_id" {
   sensitive = true
 }
 
-variable "cognito_client_id" {
+variable "cognito_user_pool_client_id" {
   description = "this is the client ID for the Cognito user pool"
   type = string
   sensitive = true

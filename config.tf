@@ -97,7 +97,7 @@ module "api_gateway" {
   orchestrator_lambda_invoke_arn = module.orchestrator_lambda.lambda_inv_arn
   auth_lambda_function_name = module.auth_lambda.lambda_function_name
   orchestrator_lambda_function_name = module.orchestrator_lambda.lambda_function_name
-  cognito_user_pool_id = var.environment == "prod" ? module.cognito.user_pool_id : "${module.cognito.user_pool_id}-dev"
-  cognito_client_id = var.environment == "prod" ? module.cognito.user_pool_client_id : "${module.cognito.user_pool_client_id}-dev"
+  cognito_user_pool_id = var.environment == "prod" ? module.cognito.cognito_user_pool_id : "${module.cognito.cognito_user_pool_id}-dev"
+  cognito_user_pool_client_id = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
   cloudwatch_log_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
