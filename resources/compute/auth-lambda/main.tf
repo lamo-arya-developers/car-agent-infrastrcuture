@@ -1,8 +1,8 @@
-resource "aws_lambda_function" "orchestrator" {
-  description = "this lambda function is responsible for orchestrating the car agent's tasks, it will be triggered by an API Gateway and will interact with s3 and dynamodb to manage the agent's state and data"
-  function_name = var.env == "prod" ? "car-agent-orchestrator-lambda" : "car-agent-orchestrator-lambda-dev"
+resource "aws_lambda_function" "auth" {
+  description = "this lambda function is responsible for authenticating, logging out and refreshing tokens"
+  function_name = var.env == "prod" ? "car-agent-auth-lambda" : "car-agent-auth-lambda-dev"
   role          = var.lambda_execution_role_arn
-  timeout = 300 
+  timeout = 100
   # maye increase this later depending on 
   # how long we want the agent to be able to run for
   package_type = "Image"
@@ -18,7 +18,6 @@ resource "aws_lambda_function" "orchestrator" {
 
   environment {
     variables = {
-        DYNAMODB_TABLE_NAME = var.dynamodb_name
         S3_BUCKET_NAME     = var.s3_name
         LOG_GROUP_NAME     = var.cloudwatch_log_group_name
     }

@@ -1,7 +1,7 @@
 
 # Trust policy — allows Lambda service to assume this role
-resource "aws_iam_role" "orchestrator" {
-  name = "car-agent-orchestrator-${var.env}"
+resource "aws_iam_role" "lambda" {
+  name = "car-agent-lambda-${var.env}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,9 +17,9 @@ resource "aws_iam_role" "orchestrator" {
   })
 }
 
-resource "aws_iam_role_policy" "orchestrator" {
-  name = "car-agent-orchestrator-policy-${var.env}"
-  role = aws_iam_role.orchestrator.id
+resource "aws_iam_role_policy" "lambda" {
+  name = "car-agent-lambda-policy-${var.env}"
+  role = aws_iam_role.lambda.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -63,7 +63,7 @@ resource "aws_iam_role_policy" "orchestrator" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage"
         ]
-        Resource = "${var.ecr_arn}"
+        Resource = var.ecr_arns
       }
     ]
   })

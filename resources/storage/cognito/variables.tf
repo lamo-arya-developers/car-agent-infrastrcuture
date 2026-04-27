@@ -1,5 +1,6 @@
-variable "environment" {
-  description = "this is the environment the of the infrastrcuture"
+
+variable "env" {
+  description = "the environment for all resources"
   type = string
   sensitive = true
 }
@@ -15,12 +16,12 @@ variable "google_client_secret" {
   sensitive = true
 }
 
-#variable "facebook_app_id" {
+#variable "facebook_app_id" {     --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 #  description = "this is the Facebook app ID"
 #  type      = string
 #  sensitive = true
 #}
-#variable "facebook_app_secret" {
+#variable "facebook_app_secret" { --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 #  description = "this is the Facebook app secret"
 #  type      = string
 #  sensitive = true

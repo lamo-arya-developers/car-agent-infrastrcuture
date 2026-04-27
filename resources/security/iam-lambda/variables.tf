@@ -4,9 +4,9 @@ variable "env" {
   sensitive = true
 }
 
-variable "ecr_arn" {
-  description = "used for the lambda function to be granted access to the ECR repository"
-  type = string
+variable "ecr_arns" {
+  description = "used for the lambda functions to be granted access to pull images from the ECR repository repositories"
+  type = list(string)
   sensitive = true
 }
 variable "s3_arn" {

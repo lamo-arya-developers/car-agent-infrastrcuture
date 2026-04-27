@@ -18,6 +18,4 @@ jobs:
     with:
       working_directory: .
       environment: prod
-
-    secrets:
-      OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN }}
+    secrets: inherit

@@ -1,5 +1,6 @@
+
 variable "env" {
-  description = "the environment for the lambda function"
+  description = "the environment for all resources"
   type = string
   sensitive = true
 }

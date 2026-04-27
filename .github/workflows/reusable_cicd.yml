@@ -11,6 +11,14 @@ on:
     secrets:
       OIDC_ROLE_ARN:
         required: true
+      GOOGLE_CLIENT_ID:
+        required: true
+      GOOGLE_CLIENT_SECRET:
+        required: true
+      # FACEBOOK_APP_ID:
+      #   required: true
+      # FACEBOOK_APP_SECRET:
+      #   required: true
 
 jobs:
   terraform:
@@ -62,8 +70,18 @@ jobs:
           ecr_url: ${{ steps.ecr.outputs.ecr_agentcore_url }}
 
       - name: Terraform Plan
+        env:
+          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # TF_VAR_facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # TF_VAR_facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
         run: terraform plan -var-file="${{ inputs.environment }}.tfvars"
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # TF_VAR_facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # TF_VAR_facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
         run: terraform apply -auto-approve -var-file="${{ inputs.environment }}.tfvars"
