@@ -9,12 +9,27 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Push image
+    - name: Push image if repo is empty
       shell: bash
       run: |
+        ECR_URL="${{ inputs.ecr_url }}"
+        REPO_NAME="${ECR_URL##*/}"
+
+        EXISTING_IMAGES=$(aws ecr list-images \
+          --repository-name "$REPO_NAME" \
+          --region us-east-1 \
+          --query 'imageIds[*]' \
+          --output json)
+
+        if [ "$EXISTING_IMAGES" != "[]" ]; then
+          echo "Repository $REPO_NAME already has images — skipping placeholder push."
+          exit 0
+        fi
+
+        echo "Repository $REPO_NAME is empty — pushing placeholder image."
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         aws ecr get-login-password --region us-east-1 | \
           docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
         docker pull public.ecr.aws/lambda/python:3.12
-        docker tag public.ecr.aws/lambda/python:3.12 "${{ inputs.ecr_url }}:latest"
-        docker push "${{ inputs.ecr_url }}:latest"
+        docker tag public.ecr.aws/lambda/python:3.12 "${ECR_URL}:latest"
+        docker push "${ECR_URL}:latest"
