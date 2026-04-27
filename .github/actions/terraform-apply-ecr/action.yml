@@ -23,6 +23,11 @@ runs:
     - name: Apply ECR modules
       id: apply
       shell: bash
+      env:
+          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # TF_VAR_facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # TF_VAR_facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
       run: |
         terraform apply -auto-approve \
           -target=module.ecr_orchestrator_lambda \
