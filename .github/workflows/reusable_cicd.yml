@@ -99,7 +99,8 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -target=module.s3 \
-            -target=module.dynamodb \
+            -target=module.dynamodb_car \
+            -target=module.dynamodb_user \
             -target=module.cloudwatch \
             -target=module.cognito \
             -target=module.iam_lambda \

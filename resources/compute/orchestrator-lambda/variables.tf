@@ -9,8 +9,13 @@ variable "s3_name" {
   type = string
   sensitive = false
 }
-variable "dynamodb_name" {
-  description = "used for the lambda function to know which table to interact with"
+variable "dynamodb_car_name" {
+  description = "used for the lambda function to know which table to interact with (car table)"
+  type = string
+  sensitive = false
+}
+variable "dynamodb_user_name" {
+  description = "used for the lambda function to know which table to interact with (user table)"
   type = string
   sensitive = false
 }

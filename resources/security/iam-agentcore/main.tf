@@ -1,7 +1,7 @@
 
 # Trust policy — allows Lambda service to assume this role
-resource "aws_iam_role" "lambda" {
-  name = "car-agent-lambda-${var.env}"
+resource "aws_iam_role" "agentcore" {
+  name = "car-agentcore-${var.env}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,9 +17,9 @@ resource "aws_iam_role" "lambda" {
   })
 }
 
-resource "aws_iam_role_policy" "lambda" {
-  name = "car-agent-lambda-policy-${var.env}"
-  role = aws_iam_role.lambda.id
+resource "aws_iam_role_policy" "agentcore" {
+  name = "car-agentcore-policy-${var.env}"
+  role = aws_iam_role.agentcore.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

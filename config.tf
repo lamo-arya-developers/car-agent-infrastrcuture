@@ -15,6 +15,7 @@ terraform {
     }
   }
 }
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -24,8 +25,12 @@ module "s3" {
   source = "./resources/storage/s3"
   env = var.environment
 }
-module "dynamodb" {
-  source = "./resources/storage/dynamodb"
+module "dynamodb_car" {
+  source = "./resources/storage/dynamodb-car"
+  env = var.environment
+}
+module "dynamodb_user" {
+  source = "./resources/storage/dynamodb-user"
   env = var.environment
 }
 module "cloudwatch" {
@@ -63,7 +68,10 @@ module "iam_lambda" {
     module.ecr_auth_lambda.ecr_lambda_repo_arn
   ]
   s3_arn = module.s3.s3_arn
-  dynamodb_arn = module.dynamodb.table_arn
+  dynamodb_arns = [
+    module.dynamodb_car.table_arn, 
+    module.dynamodb_user.table_arn
+  ]
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
 
@@ -73,7 +81,8 @@ module "orchestrator_lambda" {
 
   env = var.environment
   s3_name = module.s3.s3_name
-  dynamodb_name = module.dynamodb.table_name
+  dynamodb_car_name = module.dynamodb_car.table_name
+  dynamodb_user_name = module.dynamodb_user.table_name
   ecr_url = module.ecr_orchestrator_lambda.ecr_lambda_repo_url
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
