@@ -18,7 +18,8 @@ resource "aws_lambda_function" "orchestrator" {
 
   environment {
     variables = {
-        DYNAMODB_TABLE_NAME = var.dynamodb_name
+        DYNAMODB_CAR_TABLE_NAME = var.dynamodb_car_name
+        DYNAMODB_USER_TABLE_NAME = var.dynamodb_user_name
         S3_BUCKET_NAME     = var.s3_name
         LOG_GROUP_NAME     = var.cloudwatch_log_group_name
     }
