@@ -1,6 +1,6 @@
 
 resource "aws_bedrockagentcore_agent_runtime" "agentcore" {
-  agent_runtime_name = var.env == "prod" ? "car-agent-runtime-prod" : "car-agent-runtime-dev"
+  agent_runtime_name = var.env == "prod" ? "car_agent_runtime_prod" : "car_agent_runtime_dev"
   description        = "AgentCore runtime for the car agent — containerised execution environment hosted on ECR"
   role_arn           = var.role_arn
 
