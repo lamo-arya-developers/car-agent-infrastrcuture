@@ -3,6 +3,7 @@ resource "aws_lambda_function" "orchestrator" {
   function_name = var.env == "prod" ? "car-agent-orchestrator-lambda" : "car-agent-orchestrator-lambda-dev"
   role          = var.lambda_execution_role_arn
   timeout = 300 
+  architectures = [ "arm64" ]
   # maye increase this later depending on 
   # how long we want the agent to be able to run for
   package_type = "Image"

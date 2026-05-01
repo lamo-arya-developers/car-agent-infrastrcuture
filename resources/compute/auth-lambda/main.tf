@@ -3,6 +3,7 @@ resource "aws_lambda_function" "auth" {
   function_name = var.env == "prod" ? "car-agent-auth-lambda" : "car-agent-auth-lambda-dev"
   role          = var.lambda_execution_role_arn
   timeout = 100
+  architectures = [ "arm64" ]
   # maye increase this later depending on 
   # how long we want the agent to be able to run for
   package_type = "Image"
