@@ -76,18 +76,21 @@ jobs:
         uses: ./.github/actions/push-placeholder-image
         with:
           ecr_url: ${{ steps.apply-ecr.outputs.ecr_orchestrator_lambda_url }}
+          platform: linux/amd64
 
       - name: Push placeholder image to Auth Lambda ECR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/actions/push-placeholder-image
         with:
           ecr_url: ${{ steps.apply-ecr.outputs.ecr_auth_lambda_url }}
+          platform: linux/amd64
 
       - name: Push placeholder image to AgentCore ECR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/actions/push-placeholder-image
         with:
           ecr_url: ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
+          platform: linux/arm64
 
       - name: Terraform Apply Remaining Resources
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

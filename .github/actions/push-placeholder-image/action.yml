@@ -5,10 +5,20 @@ inputs:
   ecr_url:
     required: true
     description: ECR repository URL
+  platform:
+    required: false
+    default: linux/amd64
+    description: Target platform architecture for the placeholder image (e.g. linux/amd64, linux/arm64)
 
 runs:
   using: composite
   steps:
+    - name: Set up QEMU for cross-platform builds
+      if: inputs.platform == 'linux/arm64'
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+
     - name: Push image if repo is empty
       shell: bash
       run: |
@@ -30,6 +40,6 @@ runs:
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         aws ecr get-login-password --region us-east-1 | \
           docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
-        docker pull public.ecr.aws/lambda/python:3.12
-        docker tag public.ecr.aws/lambda/python:3.12 "${ECR_URL}:latest"
+        docker pull --platform ${{ inputs.platform }} public.ecr.aws/docker/library/python:3.13-slim
+        docker tag public.ecr.aws/docker/library/python:3.13-slim "${ECR_URL}:latest"
         docker push "${ECR_URL}:latest"
