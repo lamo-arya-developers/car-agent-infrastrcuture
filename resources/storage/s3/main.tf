@@ -2,6 +2,17 @@ resource "aws_s3_bucket" "bucket" {
   bucket = var.env == "prod" ? "car-agent-bucket-prod"  : "car-agent-bucket-dev"
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256" # AWS-managed key — no cost, audit trail via CloudTrail
+    }
+    bucket_key_enabled = true
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
   bucket = aws_s3_bucket.bucket.id
 

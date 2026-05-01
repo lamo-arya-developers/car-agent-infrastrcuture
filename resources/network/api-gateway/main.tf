@@ -1,12 +1,16 @@
 
+# Resolves the current region dynamically so the Cognito JWT issuer URL
+# stays correct regardless of which region the provider is pointed at
+data "aws_region" "current" {}
+
 resource "aws_apigatewayv2_api" "agent" {
   name          = var.env == "prod" ? "car-agent-api" : "car-agent-api-dev"
   protocol_type = "HTTP"
 
   cors_configuration {
     allow_origins = [
-      "https://www.bilkopshjalpen.se",
-      "https://bilkopshjalpen.se",
+      "https://www.xn--bilkpshjlpen-ncb1w.se",
+      "https://xn--bilkpshjlpen-ncb1w.se",
     ]
     allow_methods = ["GET", "POST", "OPTIONS"]
     allow_headers = ["Authorization", "Content-Type"]
@@ -24,7 +28,7 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
 
   jwt_configuration {
     audience = [var.cognito_user_pool_client_id]
-    issuer   = "https://cognito-idp.us-east-1.amazonaws.com/${var.cognito_user_pool_id}"
+    issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${var.cognito_user_pool_id}"
   }
 }
 

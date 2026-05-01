@@ -31,7 +31,7 @@ resource "aws_iam_role_policy" "agentcore" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = var.cloudwatch_logs_group_arn
+        Resource = "${var.cloudwatch_logs_group_arn}"
       },
       # ECR — GetAuthorizationToken is a global action, must target "*"
       {
@@ -46,7 +46,7 @@ resource "aws_iam_role_policy" "agentcore" {
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = var.ecr_agentcore_arn
+        Resource = "${var.ecr_agentcore_arn}"
       }
     ]
   })

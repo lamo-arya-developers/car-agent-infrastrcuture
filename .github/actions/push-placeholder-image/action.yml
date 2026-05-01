@@ -25,9 +25,13 @@ runs:
         ECR_URL="${{ inputs.ecr_url }}"
         REPO_NAME="${ECR_URL##*/}"
 
+        # Extract region directly from the ECR URL (e.g. 123456789.dkr.ecr.eu-north-1.amazonaws.com/repo)
+        # so this action works regardless of which region ECR is deployed in
+        REGION=$(echo "$ECR_URL" | cut -d. -f4)
+
         LATEST_IMAGE=$(aws ecr list-images \
           --repository-name "$REPO_NAME" \
-          --region us-east-1 \
+          --region "$REGION" \
           --query 'imageIds[?imageTag==`latest`]' \
           --output json)
 
@@ -35,12 +39,12 @@ runs:
           echo "Found existing latest tag in $REPO_NAME — deleting before re-push."
           aws ecr batch-delete-image \
             --repository-name "$REPO_NAME" \
-            --region us-east-1 \
+            --region "$REGION" \
             --image-ids imageTag=latest
         else
           EXISTING_IMAGES=$(aws ecr list-images \
             --repository-name "$REPO_NAME" \
-            --region us-east-1 \
+            --region "$REGION" \
             --query 'imageIds[*]' \
             --output json)
 
@@ -53,8 +57,8 @@ runs:
         fi
 
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        aws ecr get-login-password --region us-east-1 | \
-          docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
+        aws ecr get-login-password --region "$REGION" | \
+          docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
         docker pull --platform ${{ inputs.platform }} public.ecr.aws/docker/library/python:3.13-slim
         docker tag public.ecr.aws/docker/library/python:3.13-slim "${ECR_URL}:latest"
         docker push "${ECR_URL}:latest"

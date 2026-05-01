@@ -25,7 +25,7 @@ resource "aws_cognito_user_pool" "agent" {
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
-    email_subject        = "Din verifieringskod för Bilköpshjälparen"
+    email_subject        = "Din verifieringskod för Bilköpshjälpen"
     email_message        = "Din verifieringskod är {####}"
   }
 
@@ -129,12 +129,12 @@ resource "aws_cognito_user_pool_client" "agent" {
   allowed_oauth_flows_user_pool_client = true
 
   callback_urls = [
-    "https://www.bilkopshjalpen.se/auth/callback",
-    "https://bilkopshjalpen.se/auth/callback"
+    "https://www.xn--bilkpshjlpen-ncb1w.se/auth/callback",
+    "https://xn--bilkpshjlpen-ncb1w.se/auth/callback"
   ]
   logout_urls  = [
-    "https://www.bilkopshjalpen.se",
-    "https://bilkopshjalpen.se"
+    "https://www.xn--bilkpshjlpen-ncb1w.se",
+    "https://xn--bilkpshjlpen-ncb1w.se"
   ]
   token_validity_units {
     access_token  = "minutes"

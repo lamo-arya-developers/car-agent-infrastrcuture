@@ -42,7 +42,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: eu-north-1
 
       - name: Terraform Init
         run: terraform init
@@ -93,6 +93,7 @@ jobs:
           platform: linux/arm64
 
       - name: Terraform Apply Remaining Resources
+        id: apply-remaining
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
@@ -112,4 +113,20 @@ jobs:
             -target=module.api_gateway \
             -target=module.iam_agentcore \
             -target=module.agentcore \
+            -target=module.cloudtrail \
             -var-file="${{ inputs.environment }}.tfvars"
+          # Skipped (Route53 hosted zone not yet validated):
+          #   -target=module.route53
+          #   -target=module.acm
+          #   -target=module.cloudfront
+          #   -target=aws_s3_bucket_policy.cloudfront_access
+          echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          # echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      # Commented out — requires validated Route53 hosted zone + CloudFront distribution
+      # - name: Deploy Frontend to S3
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   uses: ./.github/actions/deploy-frontend
+      #   with:
+      #     s3_bucket_name: ${{ steps.apply-remaining.outputs.s3_bucket_name }}
+      #     cloudfront_distribution_id: ${{ steps.apply-remaining.outputs.cloudfront_distribution_id }}

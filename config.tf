@@ -16,7 +16,15 @@ terraform {
   }
 }
 
+# Primary provider — all resources deploy to Stockholm (eu-north-1) for GDPR data residency
 provider "aws" {
+  region = "eu-north-1"
+}
+
+# ACM certificates for CloudFront MUST be in us-east-1 — AWS hard requirement
+# Only the acm module uses this alias via providers = { aws = aws.us_east_1 }
+provider "aws" {
+  alias  = "us_east_1"
   region = "us-east-1"
 }
 
@@ -25,6 +33,7 @@ module "s3" {
   source = "./resources/storage/s3"
   env = var.environment
 }
+
 module "dynamodb_car" {
   source = "./resources/storage/dynamodb-car"
   env = var.environment
@@ -48,6 +57,14 @@ module "ecr_auth_lambda" {
 module "ecr_agentcore" {
   source = "./resources/storage/ecr-agentcore"
   env = var.environment
+}
+module "cloudtrail" {
+  source = "./resources/storage/cloudtrail"
+  env    = var.environment
+  dynamodb_table_arns = [
+    module.dynamodb_car.table_arn,
+    module.dynamodb_user.table_arn
+  ]
 }
 module "cognito" {
   source = "./resources/storage/cognito"
@@ -124,3 +141,31 @@ module "api_gateway" {
   cognito_user_pool_client_id = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
   cloudwatch_log_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
+# module "route53" {
+#   source      = "./resources/network/route53"
+#   env         = var.environment
+#   domain_name = "xn--bilkpshjlpen-ncb1w.se"
+# }
+# module "acm" {
+#   source      = "./resources/network/acm"
+#   env         = var.environment
+#   domain_name = "xn--bilkpshjlpen-ncb1w.se"
+#   zone_id     = module.route53.zone_id
+#
+#   # ACM certs for CloudFront must live in us-east-1 regardless of the main provider region
+#   providers = {
+#     aws = aws.us_east_1
+#   }
+# }
+# module "cloudfront" {
+#   source = "./resources/network/cloudfront"
+#
+#   env                            = var.environment
+#   domain_name                    = "xn--bilkpshjlpen-ncb1w.se"
+#   zone_id                        = module.route53.zone_id
+#   certificate_arn                = module.acm.certificate_arn
+#   api_gateway_endpoint           = module.api_gateway.api_gateway_endpoint
+#   s3_bucket_name                 = module.s3.s3_name
+#   s3_bucket_arn                  = module.s3.s3_arn
+#   s3_bucket_regional_domain_name = module.s3.s3_regional_domain_name
+# }

@@ -13,3 +13,13 @@ output "ecr_agentcore_url" {
   sensitive = false
   description = "this is leveraged in the CI/CD pipeline to deploy a placeholder image to agentcore"
 }
+output "s3_bucket_name" {
+  value       = module.s3.s3_name
+  sensitive   = false
+  description = "used in CI/CD to sync the Vite dist/ build to the correct S3 bucket per environment"
+}
+# output "cloudfront_distribution_id" {
+#   value       = module.cloudfront.cloudfront_distribution_id
+#   sensitive   = false
+#   description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
+# }
