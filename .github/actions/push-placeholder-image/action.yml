@@ -1,5 +1,5 @@
 name: Push Placeholder Image
-description: Pushes a placeholder image to an ECR repository
+description: Pushes a placeholder image to an ECR repository. Replaces the existing image if tagged latest, skips if no latest tag exists, pushes fresh if the repo is empty.
 
 inputs:
   ecr_url:
@@ -19,24 +19,39 @@ runs:
       with:
         platforms: arm64
 
-    - name: Push image if repo is empty
+    - name: Push placeholder image
       shell: bash
       run: |
         ECR_URL="${{ inputs.ecr_url }}"
         REPO_NAME="${ECR_URL##*/}"
 
-        EXISTING_IMAGES=$(aws ecr list-images \
+        LATEST_IMAGE=$(aws ecr list-images \
           --repository-name "$REPO_NAME" \
           --region us-east-1 \
-          --query 'imageIds[*]' \
+          --query 'imageIds[?imageTag==`latest`]' \
           --output json)
 
-        if [ "$EXISTING_IMAGES" != "[]" ]; then
-          echo "Repository $REPO_NAME already has images — skipping placeholder push."
-          exit 0
+        if [ "$LATEST_IMAGE" != "[]" ]; then
+          echo "Found existing latest tag in $REPO_NAME — deleting before re-push."
+          aws ecr batch-delete-image \
+            --repository-name "$REPO_NAME" \
+            --region us-east-1 \
+            --image-ids imageTag=latest
+        else
+          EXISTING_IMAGES=$(aws ecr list-images \
+            --repository-name "$REPO_NAME" \
+            --region us-east-1 \
+            --query 'imageIds[*]' \
+            --output json)
+
+          if [ "$EXISTING_IMAGES" != "[]" ]; then
+            echo "Repository $REPO_NAME has images but no latest tag — skipping."
+            exit 0
+          fi
+
+          echo "Repository $REPO_NAME is empty — pushing placeholder image."
         fi
 
-        echo "Repository $REPO_NAME is empty — pushing placeholder image."
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         aws ecr get-login-password --region us-east-1 | \
           docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com"
