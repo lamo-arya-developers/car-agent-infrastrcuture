@@ -16,7 +16,7 @@ resource "aws_bedrockagentcore_agent_runtime" "agentcore" {
 }
 
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "agentcore" {
-  name             = var.env == "prod" ? "car-agent-endpoint-prod" : "car-agent-endpoint-dev"
+  name             = var.env == "prod" ? "car_agent_endpoint_prod" : "car_agent_endpoint_dev"
   agent_runtime_id = aws_bedrockagentcore_agent_runtime.agentcore.agent_runtime_id
   description      = "Network endpoint for the car agent AgentCore runtime"
 }
