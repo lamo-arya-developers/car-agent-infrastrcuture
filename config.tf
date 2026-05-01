@@ -2,9 +2,9 @@
 terraform {
   required_version = ">=1.14.0"
   backend "s3" {
-    bucket  = "remote-tfstates-bucket"
+    bucket  = "bilkpshjalpen-tfstate-files"
     key     = "product/car-agent/poc/terraform.tfstate"
-    region  = "us-east-1"
+    region  = "eu-north-1"
     encrypt = true
   }
 
