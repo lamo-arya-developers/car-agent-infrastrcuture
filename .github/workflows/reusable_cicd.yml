@@ -107,4 +107,6 @@ jobs:
             -target=module.orchestrator_lambda \
             -target=module.auth_lambda \
             -target=module.api_gateway \
+            -target=module.iam_agentcore \
+            -target=module.agentcore \
             -var-file="${{ inputs.environment }}.tfvars"

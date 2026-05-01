@@ -69,9 +69,15 @@ module "iam_lambda" {
   ]
   s3_arn = module.s3.s3_arn
   dynamodb_arns = [
-    module.dynamodb_car.table_arn, 
+    module.dynamodb_car.table_arn,
     module.dynamodb_user.table_arn
   ]
+  cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
+}
+module "iam_agentcore" {
+  source            = "./resources/security/iam-agentcore"
+  env               = var.environment
+  ecr_agentcore_arn = module.ecr_agentcore.ecr_agentcore_repo_arn
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
 
@@ -95,6 +101,14 @@ module "auth_lambda" {
   s3_name = module.s3.s3_name
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
+}
+
+module "agentcore" {
+  source   = "./resources/compute/agentcore"
+  
+  env      = var.environment
+  ecr_url  = module.ecr_agentcore.ecr_agentcore_repo_url
+  role_arn = module.iam_agentcore.agentcore_role_arn
 }
 
 #### NETWORKING RESOURCES ####
