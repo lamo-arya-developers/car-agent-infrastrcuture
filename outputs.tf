@@ -15,7 +15,7 @@ output "ecr_agentcore_url" {
 }
 output "s3_bucket_name" {
   value       = module.s3.s3_name
-  sensitive   = false
+  sensitive   = true
   description = "used in CI/CD to sync the Vite dist/ build to the correct S3 bucket per environment"
 }
 # output "cloudfront_distribution_id" {
