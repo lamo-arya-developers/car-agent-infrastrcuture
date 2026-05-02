@@ -12,11 +12,11 @@ resource "aws_apigatewayv2_api" "agent" {
       "https://www.xn--bilkpshjlpen-ncb1w.se",
       "https://xn--bilkpshjlpen-ncb1w.se",
     ]
-    allow_methods = ["GET", "POST", "OPTIONS"]
-    allow_headers = ["Authorization", "Content-Type"]
+    allow_methods     = ["GET", "POST", "OPTIONS"]
+    allow_headers     = ["Authorization", "Content-Type"]
     allow_credentials = true
-    expose_headers = [ "Set-Cookie" ]
-    max_age = 300
+    expose_headers    = ["Set-Cookie"]
+    max_age           = 300
   }
 }
 
@@ -83,14 +83,14 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
 
   default_route_settings {
-    throttling_burst_limit = 100
-    throttling_rate_limit = 50
+    throttling_burst_limit   = 100
+    throttling_rate_limit    = 50
     detailed_metrics_enabled = false # when paying customers come -> true
   }
 
   access_log_settings {
     destination_arn = var.cloudwatch_log_group_arn
-    format          = jsonencode({
+    format = jsonencode({
       requestId         = "$context.requestId"
       sourceIp          = "$context.identity.sourceIp"
       requestTime       = "$context.requestTime"
@@ -107,6 +107,30 @@ resource "aws_apigatewayv2_stage" "default" {
       domainName        = "$context.domainName"
     })
   }
+}
+
+#### Account Deletion Lambda ####
+resource "aws_apigatewayv2_integration" "deletion_lambda" {
+  api_id                 = aws_apigatewayv2_api.agent.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = var.deletion_lambda_invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "delete_account" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "DELETE /account"
+  target             = "integrations/${aws_apigatewayv2_integration.deletion_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_lambda_permission" "deletion_lambda_api_gateway" {
+  statement_id  = "AllowAPIGatewayInvokeDeletionLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = var.deletion_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.agent.execution_arn}/*/*"
 }
 
 resource "aws_lambda_permission" "orchestrator_lambda_api_gateway" {

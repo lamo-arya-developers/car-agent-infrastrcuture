@@ -22,6 +22,9 @@ outputs:
   ecr_agentcore_url:
     description: AgentCore ECR URL
     value: ${{ steps.apply.outputs.ecr_agentcore_url }}
+  ecr_deletion_lambda_url:
+    description: Deletion Lambda ECR URL
+    value: ${{ steps.apply.outputs.ecr_deletion_lambda_url }}
 
 runs:
   using: composite
@@ -39,7 +42,9 @@ runs:
           -target=module.ecr_orchestrator_lambda \
           -target=module.ecr_auth_lambda \
           -target=module.ecr_agentcore \
+          -target=module.ecr_deletion_lambda \
           -var-file="${{ inputs.environment }}.tfvars"
         echo "ecr_orchestrator_lambda_url=$(terraform output -raw ecr_orchestrator_lambda_url)" >> $GITHUB_OUTPUT
         echo "ecr_auth_lambda_url=$(terraform output -raw ecr_auth_lambda_url)" >> $GITHUB_OUTPUT
         echo "ecr_agentcore_url=$(terraform output -raw ecr_agentcore_url)" >> $GITHUB_OUTPUT
+        echo "ecr_deletion_lambda_url=$(terraform output -raw ecr_deletion_lambda_url)" >> $GITHUB_OUTPUT

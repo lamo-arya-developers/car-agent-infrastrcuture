@@ -121,7 +121,7 @@ resource "aws_cognito_user_pool_client" "agent" {
   supported_identity_providers = [
     "COGNITO",
     "Google"
-#    "Facebook"
+    #    "Facebook"
   ]
 
   allowed_oauth_flows                  = ["code"]
@@ -132,7 +132,7 @@ resource "aws_cognito_user_pool_client" "agent" {
     "https://www.xn--bilkpshjlpen-ncb1w.se/auth/callback",
     "https://xn--bilkpshjlpen-ncb1w.se/auth/callback"
   ]
-  logout_urls  = [
+  logout_urls = [
     "https://www.xn--bilkpshjlpen-ncb1w.se",
     "https://xn--bilkpshjlpen-ncb1w.se"
   ]
@@ -147,12 +147,12 @@ resource "aws_cognito_user_pool_client" "agent" {
   refresh_token_validity = 30
 
   explicit_auth_flows = [
-    "ALLOW_USER_SRP_AUTH", # email/password login
+    "ALLOW_USER_SRP_AUTH",     # email/password login
     "ALLOW_REFRESH_TOKEN_AUTH" # silent refresh
   ]
 
   depends_on = [
     aws_cognito_identity_provider.google
-#    aws_cognito_identity_provider.facebook
+    #    aws_cognito_identity_provider.facebook
   ]
 }

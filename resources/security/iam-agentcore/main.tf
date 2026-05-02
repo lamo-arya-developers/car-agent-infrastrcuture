@@ -7,7 +7,7 @@ resource "aws_iam_role" "agentcore" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "bedrock-agentcore.amazonaws.com"
         }

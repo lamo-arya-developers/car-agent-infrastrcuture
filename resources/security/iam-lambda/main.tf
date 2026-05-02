@@ -7,11 +7,11 @@ resource "aws_iam_role" "lambda" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "lambda.amazonaws.com"
         }
-        Action    = "sts:AssumeRole"
+        Action = "sts:AssumeRole"
       }
     ]
   })
@@ -44,7 +44,8 @@ resource "aws_iam_role_policy" "lambda" {
         Action = [
           "s3:GetObject",
           "s3:PutObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:deleteObject"
         ]
         Resource = [
           "${var.s3_arn}",
@@ -60,6 +61,22 @@ resource "aws_iam_role_policy" "lambda" {
           "ecr:BatchGetImage"
         ]
         Resource = var.ecr_arns
+      },
+      # Cognito — deletion lambda needs to permanently remove users from the user pool
+      {
+        Effect   = "Allow"
+        Action   = ["cognito-idp:AdminDeleteUser"]
+        Resource = "${var.cognito_user_pool_arn}"
+      },
+      # SES — deletion lambda removes contacts, auth lambda creates contacts
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:CreateContact",
+          "ses:DeleteContact",
+          "ses:GetContact"
+        ]
+        Resource = "*" # scope to contact list ARN once SES module is provisioned
       }
     ]
   })

@@ -31,32 +31,36 @@ provider "aws" {
 #### STORAGE RESOURCES ####
 module "s3" {
   source = "./resources/storage/s3"
-  env = var.environment
+  env    = var.environment
 }
 
 module "dynamodb_car" {
   source = "./resources/storage/dynamodb-car"
-  env = var.environment
+  env    = var.environment
 }
 module "dynamodb_user" {
   source = "./resources/storage/dynamodb-user"
-  env = var.environment
+  env    = var.environment
 }
 module "cloudwatch" {
   source = "./resources/storage/cloudwatch"
-  env = var.environment
+  env    = var.environment
 }
 module "ecr_orchestrator_lambda" {
   source = "./resources/storage/ecr-orchestrator-lambda"
-  env = var.environment
+  env    = var.environment
 }
 module "ecr_auth_lambda" {
   source = "./resources/storage/ecr-auth-lambda"
-  env = var.environment
+  env    = var.environment
+}
+module "ecr_deletion_lambda" {
+  source = "./resources/storage/ecr-deletion-lambda"
+  env    = var.environment
 }
 module "ecr_agentcore" {
   source = "./resources/storage/ecr-agentcore"
-  env = var.environment
+  env    = var.environment
 }
 module "cloudtrail" {
   source = "./resources/storage/cloudtrail"
@@ -68,9 +72,9 @@ module "cloudtrail" {
 }
 module "cognito" {
   source = "./resources/storage/cognito"
-  
-  env = var.environment
-  google_client_id = var.environment == "prod" ? var.google_client_id : "${var.google_client_id}-dev"
+
+  env                  = var.environment
+  google_client_id     = var.environment == "prod" ? var.google_client_id : "${var.google_client_id}-dev"
   google_client_secret = var.environment == "prod" ? var.google_client_secret : "${var.google_client_secret}-dev"
   #facebook_app_id = var.facebook_app_id         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
   #facebook_app_secret = var.facebook_app_secret --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
@@ -79,10 +83,11 @@ module "cognito" {
 #### SECURITY RESOURCES ####
 module "iam_lambda" {
   source = "./resources/security/iam-lambda"
-  env = var.environment
+  env    = var.environment
   ecr_arns = [
     module.ecr_orchestrator_lambda.ecr_lambda_repo_arn,
-    module.ecr_auth_lambda.ecr_lambda_repo_arn
+    module.ecr_auth_lambda.ecr_lambda_repo_arn,
+    module.ecr_deletion_lambda.ecr_lambda_repo_arn
   ]
   s3_arn = module.s3.s3_arn
   dynamodb_arns = [
@@ -90,11 +95,12 @@ module "iam_lambda" {
     module.dynamodb_user.table_arn
   ]
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
+  cognito_user_pool_arn     = module.cognito.cognito_user_pool_arn
 }
 module "iam_agentcore" {
-  source            = "./resources/security/iam-agentcore"
-  env               = var.environment
-  ecr_agentcore_arn = module.ecr_agentcore.ecr_agentcore_repo_arn
+  source                    = "./resources/security/iam-agentcore"
+  env                       = var.environment
+  ecr_agentcore_arn         = module.ecr_agentcore.ecr_agentcore_repo_arn
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
 
@@ -102,27 +108,40 @@ module "iam_agentcore" {
 module "orchestrator_lambda" {
   source = "./resources/compute/orchestrator-lambda"
 
-  env = var.environment
-  s3_name = module.s3.s3_name
-  dynamodb_car_name = module.dynamodb_car.table_name
-  dynamodb_user_name = module.dynamodb_user.table_name
-  ecr_url = module.ecr_orchestrator_lambda.ecr_lambda_repo_url
+  env                       = var.environment
+  s3_name                   = module.s3.s3_name
+  dynamodb_car_name         = module.dynamodb_car.table_name
+  dynamodb_user_name        = module.dynamodb_user.table_name
+  ecr_url                   = module.ecr_orchestrator_lambda.ecr_lambda_repo_url
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
 }
 module "auth_lambda" {
   source = "./resources/compute/auth-lambda"
 
-  env = var.environment
-  ecr_url = module.ecr_auth_lambda.ecr_lambda_repo_url
-  s3_name = module.s3.s3_name
+  env                       = var.environment
+  ecr_url                   = module.ecr_auth_lambda.ecr_lambda_repo_url
+  s3_name                   = module.s3.s3_name
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
+  user_table_name           = module.dynamodb_user.table_name
+}
+
+module "deletion_lambda" {
+  source = "./resources/compute/deletion-lambda"
+
+  env                       = var.environment
+  ecr_url                   = module.ecr_deletion_lambda.ecr_lambda_repo_url
+  cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
+  lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
+  dynamodb_user_name        = module.dynamodb_user.table_name
+  cognito_user_pool_id      = module.cognito.cognito_user_pool_id
+  ses_contact_list_name     = "car-offers"
 }
 
 module "agentcore" {
-  source   = "./resources/compute/agentcore"
-  
+  source = "./resources/compute/agentcore"
+
   env      = var.environment
   ecr_url  = module.ecr_agentcore.ecr_agentcore_repo_url
   role_arn = module.iam_agentcore.agentcore_role_arn
@@ -132,40 +151,42 @@ module "agentcore" {
 module "api_gateway" {
   source = "./resources/network/api-gateway"
 
-  env = var.environment
-  auth_lambda_invoke_arn = module.auth_lambda.lambda_inv_arn
-  orchestrator_lambda_invoke_arn = module.orchestrator_lambda.lambda_inv_arn
-  auth_lambda_function_name = module.auth_lambda.lambda_function_name
+  env                               = var.environment
+  auth_lambda_invoke_arn            = module.auth_lambda.lambda_inv_arn
+  orchestrator_lambda_invoke_arn    = module.orchestrator_lambda.lambda_inv_arn
+  deletion_lambda_invoke_arn        = module.deletion_lambda.lambda_inv_arn
+  auth_lambda_function_name         = module.auth_lambda.lambda_function_name
   orchestrator_lambda_function_name = module.orchestrator_lambda.lambda_function_name
-  cognito_user_pool_id = var.environment == "prod" ? module.cognito.cognito_user_pool_id : "${module.cognito.cognito_user_pool_id}-dev"
-  cognito_user_pool_client_id = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
-  cloudwatch_log_group_arn = module.cloudwatch.cloudwatch_log_group_arn
+  deletion_lambda_function_name     = module.deletion_lambda.lambda_function_name
+  cognito_user_pool_id              = var.environment == "prod" ? module.cognito.cognito_user_pool_id : "${module.cognito.cognito_user_pool_id}-dev"
+  cognito_user_pool_client_id       = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
+  cloudwatch_log_group_arn          = module.cloudwatch.cloudwatch_log_group_arn
 }
-# module "route53" {
-#   source      = "./resources/network/route53"
-#   env         = var.environment
-#   domain_name = "xn--bilkpshjlpen-ncb1w.se"
-# }
-# module "acm" {
-#   source      = "./resources/network/acm"
-#   env         = var.environment
-#   domain_name = "xn--bilkpshjlpen-ncb1w.se"
-#   zone_id     = module.route53.zone_id
-#
-#   # ACM certs for CloudFront must live in us-east-1 regardless of the main provider region
-#   providers = {
-#     aws = aws.us_east_1
-#   }
-# }
-# module "cloudfront" {
-#   source = "./resources/network/cloudfront"
-#
-#   env                            = var.environment
-#   domain_name                    = "xn--bilkpshjlpen-ncb1w.se"
-#   zone_id                        = module.route53.zone_id
-#   certificate_arn                = module.acm.certificate_arn
-#   api_gateway_endpoint           = module.api_gateway.api_gateway_endpoint
-#   s3_bucket_name                 = module.s3.s3_name
-#   s3_bucket_arn                  = module.s3.s3_arn
-#   s3_bucket_regional_domain_name = module.s3.s3_regional_domain_name
-# }
+module "route53" {
+  source      = "./resources/network/route53"
+  env         = var.environment
+  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+}
+module "acm" {
+  source      = "./resources/network/acm"
+  env         = var.environment
+  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+  zone_id     = module.route53.zone_id
+
+  # ACM certs for CloudFront must live in us-east-1 regardless of the main provider region
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+module "cloudfront" {
+  source = "./resources/network/cloudfront"
+
+  env                            = var.environment
+  domain_name                    = "xn--bilkpshjlpen-ncb1w.se"
+  zone_id                        = module.route53.zone_id
+  certificate_arn                = module.acm.certificate_arn
+  api_gateway_endpoint           = module.api_gateway.api_gateway_endpoint
+  s3_bucket_name                 = module.s3.s3_name
+  s3_bucket_arn                  = module.s3.s3_arn
+  s3_bucket_regional_domain_name = module.s3.s3_regional_domain_name
+}

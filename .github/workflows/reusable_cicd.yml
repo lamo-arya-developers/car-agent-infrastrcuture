@@ -92,6 +92,13 @@ jobs:
           ecr_url: ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
           platform: linux/arm64
 
+      - name: Push placeholder image to Deletion Lambda ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/push-placeholder-image
+        with:
+          ecr_url: ${{ steps.apply-ecr.outputs.ecr_deletion_lambda_url }}
+          platform: linux/arm64
+
       - name: Terraform Apply Remaining Resources
         id: apply-remaining
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -113,17 +120,15 @@ jobs:
             -target=module.api_gateway \
             -target=module.iam_agentcore \
             -target=module.agentcore \
+            -target=module.deletion_lambda \
             -target=module.cloudtrail \
+            -target=module.route53 \
+            -target=module.acm \
+            -target=module.cloudfront \
             -var-file="${{ inputs.environment }}.tfvars"
-          # Skipped (Route53 hosted zone not yet validated):
-          #   -target=module.route53
-          #   -target=module.acm
-          #   -target=module.cloudfront
-          #   -target=aws_s3_bucket_policy.cloudfront_access
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          # echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
 
-      # Commented out — requires validated Route53 hosted zone + CloudFront distribution
       # - name: Deploy Frontend to S3
       #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       #   uses: ./.github/actions/deploy-frontend

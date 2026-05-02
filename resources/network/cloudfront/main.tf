@@ -68,14 +68,14 @@ resource "aws_cloudfront_distribution" "main" {
 
   # /auth/* → API Gateway, no caching (auth tokens must never be cached)
   ordered_cache_behavior {
-    path_pattern   = "/auth/*"
+    path_pattern           = "/auth/*"
     target_origin_id       = "api_gateway"
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
 
     # CachingDisabled managed policy
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     # AllViewerExceptHostHeader — forwards Authorization, Content-Type, etc. but not Host
     # (API Gateway rejects requests where Host doesn't match its own domain)
     origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
