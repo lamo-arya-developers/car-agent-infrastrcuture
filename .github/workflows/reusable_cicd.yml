@@ -21,7 +21,104 @@ on:
       #   required: true
 
 jobs:
-  terraform:
+  # ─── Job 1: plan + apply ECR repos ────────────────────────────────────────
+  terraform-ecr:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      ecr_orchestrator_lambda_url: ${{ steps.apply-ecr.outputs.ecr_orchestrator_lambda_url }}
+      ecr_auth_lambda_url:         ${{ steps.apply-ecr.outputs.ecr_auth_lambda_url }}
+      ecr_agentcore_url:           ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
+      ecr_deletion_lambda_url:     ${{ steps.apply-ecr.outputs.ecr_deletion_lambda_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.14.0"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          environment: ${{ inputs.environment }}
+          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+
+      - name: Terraform Apply ECR
+        id: apply-ecr
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/terraform-apply-ecr
+        with:
+          environment: ${{ inputs.environment }}
+          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+          # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
+
+  # ─── Job 2: push placeholder images in parallel (matrix) ──────────────────
+  push-images:
+    needs: terraform-ecr
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - name: orchestrator-lambda
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_orchestrator_lambda_url }}
+            platform: linux/amd64
+          - name: auth-lambda
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_auth_lambda_url }}
+            platform: linux/amd64
+          - name: agentcore
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_agentcore_url }}
+            platform: linux/arm64
+          - name: deletion-lambda
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_deletion_lambda_url }}
+            platform: linux/arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Push placeholder image to ${{ matrix.name }} ECR
+        uses: ./.github/actions/push-placeholder-image
+        with:
+          ecr_url: ${{ matrix.ecr_url }}
+          platform: ${{ matrix.platform }}
+
+  # ─── Job 3: apply remaining resources + deploy frontend ───────────────────
+  terraform-remaining:
+    needs: push-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -47,61 +144,8 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan ECR
-        id: plan-ecr
-        uses: ./.github/actions/terraform-plan
-        with:
-          environment: ${{ inputs.environment }}
-          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
-          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
-          # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
-
-      - name: Terraform Apply ECR
-        id: apply-ecr
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/actions/terraform-apply-ecr
-        with:
-          environment: ${{ inputs.environment }}
-          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
-          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
-          # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
-
-      - name: Push placeholder image to Orchestrator Lambda ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/actions/push-placeholder-image
-        with:
-          ecr_url: ${{ steps.apply-ecr.outputs.ecr_orchestrator_lambda_url }}
-          platform: linux/amd64
-
-      - name: Push placeholder image to Auth Lambda ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/actions/push-placeholder-image
-        with:
-          ecr_url: ${{ steps.apply-ecr.outputs.ecr_auth_lambda_url }}
-          platform: linux/amd64
-
-      - name: Push placeholder image to AgentCore ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/actions/push-placeholder-image
-        with:
-          ecr_url: ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
-          platform: linux/arm64
-
-      - name: Push placeholder image to Deletion Lambda ECR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/actions/push-placeholder-image
-        with:
-          ecr_url: ${{ steps.apply-ecr.outputs.ecr_deletion_lambda_url }}
-          platform: linux/arm64
-
       - name: Terraform Apply Remaining Resources
         id: apply-remaining
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -124,11 +168,3 @@ jobs:
             -target=module.cloudtrail \
             -var-file="${{ inputs.environment }}.tfvars"
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
-
-      # - name: Deploy Frontend to S3
-      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      #   uses: ./.github/actions/deploy-frontend
-      #   with:
-      #     s3_bucket_name: ${{ steps.apply-remaining.outputs.s3_bucket_name }}
-      #     cloudfront_distribution_id: ${{ steps.apply-remaining.outputs.cloudfront_distribution_id }}

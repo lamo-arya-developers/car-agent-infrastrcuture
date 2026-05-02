@@ -23,8 +23,8 @@ output "s3_bucket_name" {
   sensitive   = true
   description = "used in CI/CD to sync the Vite dist/ build to the correct S3 bucket per environment"
 }
-output "cloudfront_distribution_id" {
-  value       = module.cloudfront.cloudfront_distribution_id
-  sensitive   = true
-  description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
-}
+# output "cloudfront_distribution_id" {
+#   value       = module.cloudfront.cloudfront_distribution_id
+#   sensitive   = true
+#   description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
+# }
