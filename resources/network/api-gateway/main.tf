@@ -109,6 +109,30 @@ resource "aws_apigatewayv2_stage" "default" {
   }
 }
 
+#### Stripe Payment Lambda ####
+resource "aws_apigatewayv2_integration" "stripe_lambda" {
+  api_id                 = aws_apigatewayv2_api.agent.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = var.stripe_lambda_invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "payment" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "POST /payment"
+  target             = "integrations/${aws_apigatewayv2_integration.stripe_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_lambda_permission" "stripe_lambda_api_gateway" {
+  statement_id  = "AllowAPIGatewayInvokeStripeLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = var.stripe_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.agent.execution_arn}/*/*"
+}
+
 #### Account Deletion Lambda ####
 resource "aws_apigatewayv2_integration" "deletion_lambda" {
   api_id                 = aws_apigatewayv2_api.agent.id

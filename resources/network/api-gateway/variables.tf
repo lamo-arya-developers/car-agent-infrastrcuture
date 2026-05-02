@@ -55,3 +55,15 @@ variable "deletion_lambda_function_name" {
   type        = string
   sensitive   = false
 }
+
+variable "stripe_lambda_invoke_arn" {
+  description = "the stripe lambda invoke ARN"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_lambda_function_name" {
+  description = "the stripe lambda function name"
+  type        = string
+  sensitive   = false
+}

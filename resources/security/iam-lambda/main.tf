@@ -68,15 +68,11 @@ resource "aws_iam_role_policy" "lambda" {
         Action   = ["cognito-idp:AdminDeleteUser"]
         Resource = "${var.cognito_user_pool_arn}"
       },
-      # SES — deletion lambda removes contacts, auth lambda creates contacts
+      # SES — admin access scoped to this app's domain identity and contact list only
       {
-        Effect = "Allow"
-        Action = [
-          "ses:CreateContact",
-          "ses:DeleteContact",
-          "ses:GetContact"
-        ]
-        Resource = "*" # scope to contact list ARN once SES module is provisioned
+        Effect   = "Allow"
+        Action   = ["ses:*"]
+        Resource = var.ses_arns
       }
     ]
   })

@@ -42,6 +42,14 @@ module "dynamodb_user" {
   source = "./resources/storage/dynamodb-user"
   env    = var.environment
 }
+module "dynamodb_stripe" {
+  source = "./resources/storage/dynamodb-stripe"
+  env    = var.environment
+}
+module "ecr_stripe_lambda" {
+  source = "./resources/storage/ecr-stripe-lambda"
+  env    = var.environment
+}
 module "cloudwatch" {
   source = "./resources/storage/cloudwatch"
   env    = var.environment
@@ -67,7 +75,8 @@ module "cloudtrail" {
   env    = var.environment
   dynamodb_table_arns = [
     module.dynamodb_car.table_arn,
-    module.dynamodb_user.table_arn
+    module.dynamodb_user.table_arn,
+    module.dynamodb_stripe.table_arn
   ]
 }
 module "cognito" {
@@ -79,6 +88,12 @@ module "cognito" {
   #facebook_app_id = var.facebook_app_id         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
   #facebook_app_secret = var.facebook_app_secret --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 }
+module "ses" {
+  source      = "./resources/storage/ses"
+  env         = var.environment
+  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+  zone_id     = module.route53.zone_id
+}
 
 #### SECURITY RESOURCES ####
 module "iam_lambda" {
@@ -87,15 +102,21 @@ module "iam_lambda" {
   ecr_arns = [
     module.ecr_orchestrator_lambda.ecr_lambda_repo_arn,
     module.ecr_auth_lambda.ecr_lambda_repo_arn,
-    module.ecr_deletion_lambda.ecr_lambda_repo_arn
+    module.ecr_deletion_lambda.ecr_lambda_repo_arn,
+    module.ecr_stripe_lambda.ecr_lambda_repo_arn
   ]
   s3_arn = module.s3.s3_arn
   dynamodb_arns = [
     module.dynamodb_car.table_arn,
-    module.dynamodb_user.table_arn
+    module.dynamodb_user.table_arn,
+    module.dynamodb_stripe.table_arn
   ]
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
   cognito_user_pool_arn     = module.cognito.cognito_user_pool_arn
+  ses_arns = [
+    module.ses.domain_identity_arn,
+    module.ses.contact_list_arn
+  ]
 }
 module "iam_agentcore" {
   source                    = "./resources/security/iam-agentcore"
@@ -125,6 +146,7 @@ module "auth_lambda" {
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
   user_table_name           = module.dynamodb_user.table_name
+  ses_contact_list_name     = module.ses.contact_list_name
 }
 
 module "deletion_lambda" {
@@ -136,7 +158,19 @@ module "deletion_lambda" {
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
   dynamodb_user_name        = module.dynamodb_user.table_name
   cognito_user_pool_id      = module.cognito.cognito_user_pool_id
-  ses_contact_list_name     = "car-offers"
+  ses_contact_list_name     = module.ses.contact_list_name
+}
+
+module "stripe_lambda" {
+  source = "./resources/compute/stripe-lambda"
+
+  env                       = var.environment
+  ecr_url                   = module.ecr_stripe_lambda.ecr_lambda_repo_url
+  cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
+  lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
+  dynamodb_stripe_name      = module.dynamodb_stripe.table_name
+  dynamodb_user_name        = module.dynamodb_user.table_name
+  ses_contact_list_name     = module.ses.contact_list_name
 }
 
 module "agentcore" {
@@ -161,6 +195,8 @@ module "api_gateway" {
   cognito_user_pool_id              = var.environment == "prod" ? module.cognito.cognito_user_pool_id : "${module.cognito.cognito_user_pool_id}-dev"
   cognito_user_pool_client_id       = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
   cloudwatch_log_group_arn          = module.cloudwatch.cloudwatch_log_group_arn
+  stripe_lambda_invoke_arn          = module.stripe_lambda.lambda_inv_arn
+  stripe_lambda_function_name       = module.stripe_lambda.lambda_function_name
 }
 module "route53" {
   source      = "./resources/network/route53"

@@ -29,3 +29,9 @@ variable "user_table_name" {
   type        = string
   sensitive   = true
 }
+
+variable "ses_contact_list_name" {
+  description = "the SES contact list name — used to add new subscribers on first login"
+  type        = string
+  sensitive   = false
+}

@@ -35,6 +35,7 @@ jobs:
       ecr_auth_lambda_url:         ${{ steps.apply-ecr.outputs.ecr_auth_lambda_url }}
       ecr_agentcore_url:           ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
       ecr_deletion_lambda_url:     ${{ steps.apply-ecr.outputs.ecr_deletion_lambda_url }}
+      ecr_stripe_lambda_url:       ${{ steps.apply-ecr.outputs.ecr_stripe_lambda_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -99,6 +100,9 @@ jobs:
           - name: deletion-lambda
             ecr_url: ${{ needs.terraform-ecr.outputs.ecr_deletion_lambda_url }}
             platform: linux/arm64
+          - name: stripe-lambda
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_stripe_lambda_url }}
+            platform: linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -156,6 +160,8 @@ jobs:
             -target=module.s3 \
             -target=module.dynamodb_car \
             -target=module.dynamodb_user \
+            -target=module.dynamodb_stripe \
+            -target=module.ses \
             -target=module.cloudwatch \
             -target=module.cognito \
             -target=module.iam_lambda \
@@ -165,6 +171,15 @@ jobs:
             -target=module.iam_agentcore \
             -target=module.agentcore \
             -target=module.deletion_lambda \
+            -target=module.stripe_lambda \
             -target=module.cloudtrail \
             -var-file="${{ inputs.environment }}.tfvars"
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          # echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      # Uncomment once Route53 hosted zone is validated and CloudFront is provisioned
+      # - name: Deploy Frontend
+      #   uses: ./.github/actions/deploy-frontend
+      #   with:
+      #     s3_bucket_name: ${{ steps.apply-remaining.outputs.s3_bucket_name }}
+      #     cloudfront_distribution_id: ${{ steps.apply-remaining.outputs.cloudfront_distribution_id }}

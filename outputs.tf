@@ -18,6 +18,11 @@ output "ecr_deletion_lambda_url" {
   sensitive   = false
   description = "this is leveraged in the CI/CD pipeline to deploy a placeholder image to the deletion lambda"
 }
+output "ecr_stripe_lambda_url" {
+  value       = module.ecr_stripe_lambda.ecr_lambda_repo_url
+  sensitive   = false
+  description = "this is leveraged in the CI/CD pipeline to deploy a placeholder image to the stripe lambda"
+}
 output "s3_bucket_name" {
   value       = module.s3.s3_name
   sensitive   = true

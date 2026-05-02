@@ -30,3 +30,9 @@ variable "cognito_user_pool_arn" {
   type        = string
   sensitive   = true
 }
+
+variable "ses_arns" {
+  description = "SES resource ARNs (domain identity + contact list) — scopes ses:* to only this app's resources"
+  type        = list(string)
+  sensitive   = false
+}
