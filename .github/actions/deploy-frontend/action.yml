@@ -1,6 +1,9 @@
 
 name: Deploy Frontend
-description: Builds the Vite/React app and syncs the dist/ output to S3, then invalidates the CloudFront cache so users get the new version immediately.
+description: |
+  Uploads a placeholder dist/ to S3 and invalidates CloudFront — but ONLY if the bucket
+  has no existing content. If the application repo has already deployed a real build,
+  this action skips entirely so the production dist/ is never overwritten by a placeholder.
 
 inputs:
   s3_bucket_name:
@@ -17,7 +20,20 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Check if dist/ already exists in S3
+      id: check
+      shell: bash
+      run: |
+        OBJECT_COUNT=$(aws s3 ls s3://${{ inputs.s3_bucket_name }}/ --recursive | wc -l | tr -d ' ')
+        echo "object_count=$OBJECT_COUNT" >> $GITHUB_OUTPUT
+        if [ "$OBJECT_COUNT" -gt "0" ]; then
+          echo "S3 bucket already contains $OBJECT_COUNT object(s) — skipping deploy to protect existing build."
+        else
+          echo "S3 bucket is empty — proceeding with placeholder deploy."
+        fi
+
     - name: Set up Node.js
+      if: steps.check.outputs.object_count == '0'
       uses: actions/setup-node@v4
       with:
         node-version: 20
@@ -25,16 +41,19 @@ runs:
         cache-dependency-path: ${{ inputs.frontend_dir }}/package-lock.json
 
     - name: Install dependencies
+      if: steps.check.outputs.object_count == '0'
       shell: bash
       working-directory: ${{ inputs.frontend_dir }}
       run: npm ci
 
     - name: Build
+      if: steps.check.outputs.object_count == '0'
       shell: bash
       working-directory: ${{ inputs.frontend_dir }}
       run: npm run build
 
     - name: Sync dist/ to S3
+      if: steps.check.outputs.object_count == '0'
       shell: bash
       run: |
         aws s3 sync ${{ inputs.frontend_dir }}/dist/ s3://${{ inputs.s3_bucket_name }} \
@@ -42,6 +61,7 @@ runs:
           --cache-control "public, max-age=31536000, immutable"
 
     - name: Set index.html cache to no-cache
+      if: steps.check.outputs.object_count == '0'
       shell: bash
       # index.html must never be cached — it's the entry point that references
       # the hashed JS/CSS assets. If cached, users won't pick up new deployments.
@@ -53,6 +73,7 @@ runs:
           --content-type "text/html"
 
     - name: Invalidate CloudFront cache
+      if: steps.check.outputs.object_count == '0'
       shell: bash
       run: |
         aws cloudfront create-invalidation \
