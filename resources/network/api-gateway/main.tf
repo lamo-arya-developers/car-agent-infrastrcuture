@@ -134,25 +134,9 @@ resource "aws_apigatewayv2_route" "profile_get" {
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }
 
-resource "aws_apigatewayv2_route" "profile_post" {
-  api_id             = aws_apigatewayv2_api.agent.id
-  route_key          = "POST /profile"
-  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
-  authorization_type = "JWT"
-  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
-}
-
 resource "aws_apigatewayv2_route" "profile_put" {
   api_id             = aws_apigatewayv2_api.agent.id
   route_key          = "PUT /profile"
-  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
-  authorization_type = "JWT"
-  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
-}
-
-resource "aws_apigatewayv2_route" "profile_delete" {
-  api_id             = aws_apigatewayv2_api.agent.id
-  route_key          = "DELETE /profile"
   target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
