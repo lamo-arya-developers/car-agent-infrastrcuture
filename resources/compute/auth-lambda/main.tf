@@ -19,7 +19,6 @@ resource "aws_lambda_function" "auth" {
 
   environment {
     variables = {
-      S3_BUCKET_NAME        = var.s3_name
       LOG_GROUP_NAME        = var.cloudwatch_log_group_name
       USER_TABLE_NAME       = var.user_table_name
       SES_CONTACT_LIST_NAME = var.ses_contact_list_name

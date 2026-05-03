@@ -39,20 +39,7 @@ resource "aws_iam_role_policy" "lambda" {
         ]
         Resource = var.dynamodb_arns
       },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:deleteObject"
-        ]
-        Resource = [
-          "${var.s3_arn}",
-          "${var.s3_arn}/*"
-        ]
-      },
-      {
+{
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken",

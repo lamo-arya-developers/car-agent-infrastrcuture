@@ -67,3 +67,15 @@ variable "stripe_lambda_function_name" {
   type        = string
   sensitive   = false
 }
+
+variable "profile_lambda_invoke_arn" {
+  description = "the profile lambda invoke ARN"
+  type        = string
+  sensitive   = true
+}
+
+variable "profile_lambda_function_name" {
+  description = "the profile lambda function name"
+  type        = string
+  sensitive   = false
+}

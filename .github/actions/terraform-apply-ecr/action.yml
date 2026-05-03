@@ -28,6 +28,9 @@ outputs:
   ecr_stripe_lambda_url:
     description: Stripe Lambda ECR URL
     value: ${{ steps.apply.outputs.ecr_stripe_lambda_url }}
+  ecr_profile_lambda_url:
+    description: Profile Lambda ECR URL
+    value: ${{ steps.apply.outputs.ecr_profile_lambda_url }}
 
 runs:
   using: composite
@@ -47,9 +50,11 @@ runs:
           -target=module.ecr_agentcore \
           -target=module.ecr_deletion_lambda \
           -target=module.ecr_stripe_lambda \
+          -target=module.ecr_profile_lambda \
           -var-file="${{ inputs.environment }}.tfvars"
         echo "ecr_orchestrator_lambda_url=$(terraform output -raw ecr_orchestrator_lambda_url)" >> $GITHUB_OUTPUT
         echo "ecr_auth_lambda_url=$(terraform output -raw ecr_auth_lambda_url)" >> $GITHUB_OUTPUT
         echo "ecr_agentcore_url=$(terraform output -raw ecr_agentcore_url)" >> $GITHUB_OUTPUT
         echo "ecr_deletion_lambda_url=$(terraform output -raw ecr_deletion_lambda_url)" >> $GITHUB_OUTPUT
         echo "ecr_stripe_lambda_url=$(terraform output -raw ecr_stripe_lambda_url)" >> $GITHUB_OUTPUT
+        echo "ecr_profile_lambda_url=$(terraform output -raw ecr_profile_lambda_url)" >> $GITHUB_OUTPUT

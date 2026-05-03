@@ -23,6 +23,11 @@ output "ecr_stripe_lambda_url" {
   sensitive   = false
   description = "this is leveraged in the CI/CD pipeline to deploy a placeholder image to the stripe lambda"
 }
+output "ecr_profile_lambda_url" {
+  value       = module.ecr_profile_lambda.ecr_lambda_repo_url
+  sensitive   = false
+  description = "this is leveraged in the CI/CD pipeline to deploy a placeholder image to the profile lambda"
+}
 output "s3_bucket_name" {
   value       = module.s3.s3_name
   sensitive   = true

@@ -9,11 +9,6 @@ variable "ecr_arns" {
   type        = list(string)
   sensitive   = true
 }
-variable "s3_arn" {
-  description = "used for the lambda function to be granted access for read & write"
-  type        = string
-  sensitive   = true
-}
 variable "dynamodb_arns" {
   description = "used for the execution role to be granted access for read & write"
   type        = list(string)

@@ -4,11 +4,6 @@ variable "env" {
   sensitive   = true
 }
 
-variable "s3_name" {
-  description = "used for the lambda function to know which bucket to interact with"
-  type        = string
-  sensitive   = false
-}
 variable "ecr_url" {
   description = "this is for lambda to know what image to pull from ecr"
   type        = string

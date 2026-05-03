@@ -4,11 +4,6 @@ variable "env" {
   sensitive   = true
 }
 
-variable "s3_name" {
-  description = "used for the lambda function to know which bucket to interact with"
-  type        = string
-  sensitive   = false
-}
 variable "dynamodb_car_name" {
   description = "used for the lambda function to know which table to interact with (car table)"
   type        = string

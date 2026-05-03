@@ -33,6 +33,10 @@ module "s3" {
   source = "./resources/storage/s3"
   env    = var.environment
 }
+module "s3_profile_pictures" {
+  source = "./resources/storage/s3-profile-pictures"
+  env    = var.environment
+}
 
 module "dynamodb_car" {
   source = "./resources/storage/dynamodb-car"
@@ -48,6 +52,10 @@ module "dynamodb_stripe" {
 }
 module "ecr_stripe_lambda" {
   source = "./resources/storage/ecr-stripe-lambda"
+  env    = var.environment
+}
+module "ecr_profile_lambda" {
+  source = "./resources/storage/ecr-profile-lambda"
   env    = var.environment
 }
 module "cloudwatch" {
@@ -105,7 +113,6 @@ module "iam_lambda" {
     module.ecr_deletion_lambda.ecr_lambda_repo_arn,
     module.ecr_stripe_lambda.ecr_lambda_repo_arn
   ]
-  s3_arn = module.s3.s3_arn
   dynamodb_arns = [
     module.dynamodb_car.table_arn,
     module.dynamodb_user.table_arn,
@@ -124,13 +131,20 @@ module "iam_agentcore" {
   ecr_agentcore_arn         = module.ecr_agentcore.ecr_agentcore_repo_arn
   cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
 }
+module "iam_profile_lambda" {
+  source                    = "./resources/security/iam-profile-lambda"
+  env                       = var.environment
+  cloudwatch_logs_group_arn = module.cloudwatch.cloudwatch_log_group_arn
+  ecr_profile_lambda_arn    = module.ecr_profile_lambda.ecr_lambda_repo_arn
+  dynamodb_user_arn         = module.dynamodb_user.table_arn
+  s3_profile_pictures_arn   = module.s3_profile_pictures.s3_arn
+}
 
 #### COMPUTE RESOURCES ####
 module "orchestrator_lambda" {
   source = "./resources/compute/orchestrator-lambda"
 
   env                       = var.environment
-  s3_name                   = module.s3.s3_name
   dynamodb_car_name         = module.dynamodb_car.table_name
   dynamodb_user_name        = module.dynamodb_user.table_name
   ecr_url                   = module.ecr_orchestrator_lambda.ecr_lambda_repo_url
@@ -142,7 +156,6 @@ module "auth_lambda" {
 
   env                       = var.environment
   ecr_url                   = module.ecr_auth_lambda.ecr_lambda_repo_url
-  s3_name                   = module.s3.s3_name
   cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
   lambda_execution_role_arn = module.iam_lambda.lambda_role_arn
   user_table_name           = module.dynamodb_user.table_name
@@ -173,6 +186,17 @@ module "stripe_lambda" {
   ses_contact_list_name     = module.ses.contact_list_name
 }
 
+module "profile_lambda" {
+  source = "./resources/compute/profile-lambda"
+
+  env                       = var.environment
+  ecr_url                   = module.ecr_profile_lambda.ecr_lambda_repo_url
+  cloudwatch_log_group_name = module.cloudwatch.cloudwatch_log_group_name
+  lambda_execution_role_arn = module.iam_profile_lambda.profile_lambda_role_arn
+  dynamodb_user_name        = module.dynamodb_user.table_name
+  s3_profile_pictures_name  = module.s3_profile_pictures.s3_name
+}
+
 module "agentcore" {
   source = "./resources/compute/agentcore"
 
@@ -197,6 +221,8 @@ module "api_gateway" {
   cloudwatch_log_group_arn          = module.cloudwatch.cloudwatch_log_group_arn
   stripe_lambda_invoke_arn          = module.stripe_lambda.lambda_inv_arn
   stripe_lambda_function_name       = module.stripe_lambda.lambda_function_name
+  profile_lambda_invoke_arn         = module.profile_lambda.lambda_inv_arn
+  profile_lambda_function_name      = module.profile_lambda.lambda_function_name
 }
 module "route53" {
   source      = "./resources/network/route53"

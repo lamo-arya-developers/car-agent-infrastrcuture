@@ -36,6 +36,7 @@ jobs:
       ecr_agentcore_url:           ${{ steps.apply-ecr.outputs.ecr_agentcore_url }}
       ecr_deletion_lambda_url:     ${{ steps.apply-ecr.outputs.ecr_deletion_lambda_url }}
       ecr_stripe_lambda_url:       ${{ steps.apply-ecr.outputs.ecr_stripe_lambda_url }}
+      ecr_profile_lambda_url:      ${{ steps.apply-ecr.outputs.ecr_profile_lambda_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -103,6 +104,9 @@ jobs:
           - name: stripe-lambda
             ecr_url: ${{ needs.terraform-ecr.outputs.ecr_stripe_lambda_url }}
             platform: linux/arm64
+          - name: profile-lambda
+            ecr_url: ${{ needs.terraform-ecr.outputs.ecr_profile_lambda_url }}
+            platform: linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -165,6 +169,7 @@ jobs:
             -target=module.cloudwatch \
             -target=module.cognito \
             -target=module.iam_lambda \
+            -target=module.iam_profile_lambda \
             -target=module.orchestrator_lambda \
             -target=module.auth_lambda \
             -target=module.api_gateway \
@@ -172,6 +177,8 @@ jobs:
             -target=module.agentcore \
             -target=module.deletion_lambda \
             -target=module.stripe_lambda \
+            -target=module.profile_lambda \
+            -target=module.s3_profile_pictures \
             -target=module.cloudtrail \
             -var-file="${{ inputs.environment }}.tfvars"
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT

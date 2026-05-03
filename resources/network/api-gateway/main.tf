@@ -32,12 +32,20 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
   }
 }
 
-#### Login, Refresh & Logout Lambda ####
+#### Login, Registration, Refresh & Logout Lambda ####
+######################################################
 resource "aws_apigatewayv2_integration" "auth_lambda" {
   api_id                 = aws_apigatewayv2_api.agent.id
   integration_type       = "AWS_PROXY"
   integration_uri        = var.auth_lambda_invoke_arn
   payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "auth_register" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "POST /auth/register"
+  target             = "integrations/${aws_apigatewayv2_integration.auth_lambda.id}"
+  authorization_type = "NONE"
 }
 
 resource "aws_apigatewayv2_route" "auth_callback" {
@@ -62,6 +70,7 @@ resource "aws_apigatewayv2_route" "auth_logout" {
 }
 
 #### Orchestration Lambda ####
+##############################
 resource "aws_apigatewayv2_integration" "orchestrator_lambda" {
   api_id                 = aws_apigatewayv2_api.agent.id
   integration_type       = "AWS_PROXY"
@@ -109,7 +118,64 @@ resource "aws_apigatewayv2_stage" "default" {
   }
 }
 
+#### Profile Lambda ####
+resource "aws_apigatewayv2_integration" "profile_lambda" {
+  api_id                 = aws_apigatewayv2_api.agent.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = var.profile_lambda_invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "profile_get" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "GET /profile"
+  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "profile_post" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "POST /profile"
+  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "profile_put" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "PUT /profile"
+  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "profile_delete" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "DELETE /profile"
+  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "profile_pp_presigned_url" {
+  api_id             = aws_apigatewayv2_api.agent.id
+  route_key          = "GET /profile/pp-presigned-url"
+  target             = "integrations/${aws_apigatewayv2_integration.profile_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_lambda_permission" "profile_lambda_api_gateway" {
+  statement_id  = "AllowAPIGatewayInvokeProfileLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = var.profile_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.agent.execution_arn}/*/*"
+}
+
 #### Stripe Payment Lambda ####
+###############################
 resource "aws_apigatewayv2_integration" "stripe_lambda" {
   api_id                 = aws_apigatewayv2_api.agent.id
   integration_type       = "AWS_PROXY"
@@ -134,6 +200,7 @@ resource "aws_lambda_permission" "stripe_lambda_api_gateway" {
 }
 
 #### Account Deletion Lambda ####
+#################################
 resource "aws_apigatewayv2_integration" "deletion_lambda" {
   api_id                 = aws_apigatewayv2_api.agent.id
   integration_type       = "AWS_PROXY"
@@ -149,6 +216,8 @@ resource "aws_apigatewayv2_route" "delete_account" {
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }
 
+##### Permissions for API Gateway to invoke Lambdas #####
+#########################################################
 resource "aws_lambda_permission" "deletion_lambda_api_gateway" {
   statement_id  = "AllowAPIGatewayInvokeDeletionLambda"
   action        = "lambda:InvokeFunction"
