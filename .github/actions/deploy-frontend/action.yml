@@ -1,14 +1,21 @@
 
 name: Deploy Frontend
 description: |
-  Uploads a placeholder dist/ to S3 and invalidates CloudFront — but ONLY if the bucket
-  has no existing content. If the application repo has already deployed a real build,
-  this action skips entirely so the production dist/ is never overwritten by a placeholder.
+  Uploads content to S3 and invalidates CloudFront — but ONLY if the bucket has no existing
+  content. If the application repo has already deployed a real build, this action skips
+  entirely so the production dist/ is never overwritten.
+
+  Bootstrap mode (default): when the infrastructure repo has no frontend/ directory, a
+  minimal HTML placeholder is generated inline and uploaded directly — no Node.js required.
+  This lets you verify CloudFront is working before the real frontend repo is wired up.
+
+  Real build mode: if frontend_dir exists and contains a package.json, a full npm ci +
+  npm run build is executed instead.
 
 inputs:
   s3_bucket_name:
     required: true
-    description: Name of the S3 bucket to sync the dist/ build into
+    description: Name of the S3 bucket to sync the build into
   cloudfront_distribution_id:
     required: true
     description: CloudFront distribution ID to invalidate after the S3 sync
@@ -20,7 +27,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Check if dist/ already exists in S3
+    - name: Check if S3 bucket already has content
       id: check
       shell: bash
       run: |
@@ -29,11 +36,26 @@ runs:
         if [ "$OBJECT_COUNT" -gt "0" ]; then
           echo "S3 bucket already contains $OBJECT_COUNT object(s) — skipping deploy to protect existing build."
         else
-          echo "S3 bucket is empty — proceeding with placeholder deploy."
+          echo "S3 bucket is empty — proceeding with deploy."
         fi
 
-    - name: Set up Node.js
+    # ── Detect whether this is a real frontend repo or a bootstrap placeholder deploy ──
+    - name: Check if frontend source exists
+      id: frontend_check
       if: steps.check.outputs.object_count == '0'
+      shell: bash
+      run: |
+        if [ -f "${{ inputs.frontend_dir }}/package.json" ]; then
+          echo "has_frontend=true" >> $GITHUB_OUTPUT
+          echo "Frontend source found at ${{ inputs.frontend_dir }}/ — will run full build."
+        else
+          echo "has_frontend=false" >> $GITHUB_OUTPUT
+          echo "No frontend source found — will upload an HTML placeholder to verify CloudFront."
+        fi
+
+    # ── REAL BUILD PATH: npm ci + npm run build ────────────────────────────────────────
+    - name: Set up Node.js
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'true'
       uses: actions/setup-node@v4
       with:
         node-version: 20
@@ -41,30 +63,65 @@ runs:
         cache-dependency-path: ${{ inputs.frontend_dir }}/package-lock.json
 
     - name: Install dependencies
-      if: steps.check.outputs.object_count == '0'
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'true'
       shell: bash
       working-directory: ${{ inputs.frontend_dir }}
       run: npm ci
 
     - name: Build
-      if: steps.check.outputs.object_count == '0'
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'true'
       shell: bash
       working-directory: ${{ inputs.frontend_dir }}
       run: npm run build
 
-    - name: Sync dist/ to S3
-      if: steps.check.outputs.object_count == '0'
+    - name: Sync real build dist/ to S3
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'true'
       shell: bash
       run: |
         aws s3 sync ${{ inputs.frontend_dir }}/dist/ s3://${{ inputs.s3_bucket_name }} \
           --delete \
           --cache-control "public, max-age=31536000, immutable"
 
-    - name: Set index.html cache to no-cache
-      if: steps.check.outputs.object_count == '0'
+    # ── PLACEHOLDER PATH: inline HTML, no Node.js needed ──────────────────────────────
+    - name: Upload HTML placeholder to S3
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'false'
       shell: bash
-      # index.html must never be cached — it's the entry point that references
-      # the hashed JS/CSS assets. If cached, users won't pick up new deployments.
+      run: |
+        cat > /tmp/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Bilkopshjälpen — Coming Soon</title>
+            <style>
+              body { font-family: sans-serif; display: flex; align-items: center;
+                     justify-content: center; min-height: 100vh; margin: 0;
+                     background: #f5f5f5; }
+              .card { background: white; border-radius: 12px; padding: 48px;
+                      text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+              h1 { margin: 0 0 8px; font-size: 1.8rem; }
+              p  { color: #666; margin: 0; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>🚗 Bilkopshjälpen</h1>
+              <p>CloudFront is live. Real frontend coming soon.</p>
+            </div>
+          </body>
+        </html>
+        EOF
+
+        aws s3 cp /tmp/index.html s3://${{ inputs.s3_bucket_name }}/index.html \
+          --cache-control "no-cache, no-store, must-revalidate" \
+          --content-type "text/html"
+
+    # ── Shared: fix index.html cache header for real builds ───────────────────────────
+    # index.html must never be long-cached — it's the entry point that loads hashed assets.
+    - name: Set index.html cache to no-cache (real build only)
+      if: steps.check.outputs.object_count == '0' && steps.frontend_check.outputs.has_frontend == 'true'
+      shell: bash
       run: |
         aws s3 cp s3://${{ inputs.s3_bucket_name }}/index.html \
           s3://${{ inputs.s3_bucket_name }}/index.html \
@@ -72,6 +129,7 @@ runs:
           --cache-control "no-cache, no-store, must-revalidate" \
           --content-type "text/html"
 
+    # ── Shared: invalidate CloudFront so the new content is served immediately ─────────
     - name: Invalidate CloudFront cache
       if: steps.check.outputs.object_count == '0'
       shell: bash
