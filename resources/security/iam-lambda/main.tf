@@ -39,7 +39,7 @@ resource "aws_iam_role_policy" "lambda" {
         ]
         Resource = var.dynamodb_arns
       },
-{
+      {
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken",

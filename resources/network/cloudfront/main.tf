@@ -38,9 +38,10 @@ resource "aws_s3_bucket_policy" "cloudfront_access" {
 }
 
 resource "aws_cloudfront_distribution" "main" {
-  enabled             = true
-  comment             = var.env == "prod" ? "car-agent-distribution-prod" : "car-agent-distribution-dev"
-  aliases             = [var.domain_name]
+  enabled = true
+  comment = var.env == "prod" ? "car-agent-distribution-prod" : "car-agent-distribution-dev"
+  # Aliases are only valid with a matching ACM cert — keep this empty during the HTTP bootstrap phase
+  aliases             = var.use_custom_domain ? [var.domain_name] : []
   default_root_object = "index.html"
 
   # PriceClass_100 = US, Canada, Europe edge locations only — cheapest tier
@@ -66,11 +67,13 @@ resource "aws_cloudfront_distribution" "main" {
     origin_access_control_id = aws_cloudfront_origin_access_control.s3.id
   }
 
+  # During the HTTP bootstrap phase we use "allow-all" so plain http://<dist>.cloudfront.net works.
+  # Once the custom domain + ACM cert are in place we flip to redirect-to-https.
   # /auth/* → API Gateway, no caching (auth tokens must never be cached)
   ordered_cache_behavior {
     path_pattern           = "/auth/*"
     target_origin_id       = "api_gateway"
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = var.use_custom_domain ? "redirect-to-https" : "allow-all"
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
 
@@ -85,7 +88,7 @@ resource "aws_cloudfront_distribution" "main" {
   ordered_cache_behavior {
     path_pattern           = "/invoke"
     target_origin_id       = "api_gateway"
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = var.use_custom_domain ? "redirect-to-https" : "allow-all"
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
 
@@ -96,12 +99,26 @@ resource "aws_cloudfront_distribution" "main" {
   # /* (default) → S3, cached — serves the static frontend assets
   default_cache_behavior {
     target_origin_id       = "s3_origin"
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = var.use_custom_domain ? "redirect-to-https" : "allow-all"
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
 
     # CachingOptimized managed policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  # SPA fallback — serve index.html for any 403/404 from S3 so client-side routing keeps working
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 10
+  }
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 10
   }
 
   restrictions {
@@ -111,15 +128,20 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
+  # When use_custom_domain is false we use CloudFront's built-in cert on *.cloudfront.net.
+  # When true we attach the ACM cert (must live in us-east-1) and require SNI + TLS 1.2+.
   viewer_certificate {
-    acm_certificate_arn      = var.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = !var.use_custom_domain
+    acm_certificate_arn            = var.use_custom_domain ? var.certificate_arn : null
+    ssl_support_method             = var.use_custom_domain ? "sni-only" : null
+    minimum_protocol_version       = var.use_custom_domain ? "TLSv1.2_2021" : "TLSv1"
   }
 }
 
-# Route53 A alias record — points the apex domain at the CloudFront distribution
+# Route53 A alias record — only created once we own the custom domain.
+# During the HTTP bootstrap phase we hit the distribution directly via *.cloudfront.net.
 resource "aws_route53_record" "cloudfront_alias" {
+  count   = var.use_custom_domain ? 1 : 0
   zone_id = var.zone_id
   name    = var.domain_name
   type    = "A"

@@ -33,8 +33,16 @@ output "s3_bucket_name" {
   sensitive   = true
   description = "used in CI/CD to sync the Vite dist/ build to the correct S3 bucket per environment"
 }
-# output "cloudfront_distribution_id" {
-#   value       = module.cloudfront.cloudfront_distribution_id
-#   sensitive   = true
-#   description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
-# }
+output "cloudfront_distribution_id" {
+  value       = module.cloudfront.cloudfront_distribution_id
+  sensitive   = true
+  description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
+}
+
+# Visit this in a browser to load the site while the custom domain isn't live yet.
+# Works over both http:// and https:// because viewer_protocol_policy = allow-all when use_custom_domain = false.
+output "cloudfront_domain_name" {
+  value       = module.cloudfront.cloudfront_domain_name
+  sensitive   = false
+  description = "the *.cloudfront.net hostname for the distribution — used to view the site before the custom domain is wired up"
+}

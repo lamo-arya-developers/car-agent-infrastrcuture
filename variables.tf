@@ -15,6 +15,18 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
+# Bootstrap flag — keep false until your registrar's NS records point at Route53 AND
+# the ACM certificate has been issued. While false:
+#   * the ACM module is skipped entirely (no validation timeout)
+#   * CloudFront serves on *.cloudfront.net with its built-in cert and accepts plain HTTP
+#   * no Route53 A record is created for the apex domain
+# Flip to true (and re-apply) once the cert is "Issued" in ACM.
+variable "use_custom_domain" {
+  description = "set to true once the ACM cert for the custom domain is validated/issued; false during early bootstrap"
+  type        = bool
+  default     = false
+}
+
 #variable "facebook_app_id" {
 #  description = "this is the Facebook app ID"
 #  type      = string

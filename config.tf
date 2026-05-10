@@ -229,7 +229,10 @@ module "route53" {
   env         = var.environment
   domain_name = "xn--bilkpshjlpen-ncb1w.se"
 }
+# Skipped while use_custom_domain = false — ACM validation would block apply forever
+# if the registrar's NS records don't point at Route53 yet.
 module "acm" {
+  count       = var.use_custom_domain ? 1 : 0
   source      = "./resources/network/acm"
   env         = var.environment
   domain_name = "xn--bilkpshjlpen-ncb1w.se"
@@ -243,10 +246,13 @@ module "acm" {
 module "cloudfront" {
   source = "./resources/network/cloudfront"
 
-  env                            = var.environment
-  domain_name                    = "xn--bilkpshjlpen-ncb1w.se"
-  zone_id                        = module.route53.zone_id
-  certificate_arn                = module.acm.certificate_arn
+  env               = var.environment
+  use_custom_domain = var.use_custom_domain
+  # The custom-domain inputs below are only consumed by the cloudfront module
+  # when use_custom_domain = true; otherwise they're ignored.
+  domain_name                    = var.use_custom_domain ? "xn--bilkpshjlpen-ncb1w.se" : null
+  zone_id                        = var.use_custom_domain ? module.route53.zone_id : null
+  certificate_arn                = var.use_custom_domain ? module.acm[0].certificate_arn : null
   api_gateway_endpoint           = module.api_gateway.api_gateway_endpoint
   s3_bucket_name                 = module.s3.s3_name
   s3_bucket_arn                  = module.s3.s3_arn

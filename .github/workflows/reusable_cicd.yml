@@ -180,13 +180,16 @@ jobs:
             -target=module.profile_lambda \
             -target=module.s3_profile_pictures \
             -target=module.cloudtrail \
+            -target=module.cloudfront \
             -var-file="${{ inputs.environment }}.tfvars"
           echo "s3_bucket_name=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          # echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
 
-      # Uncomment once Route53 hosted zone is validated and CloudFront is provisioned
-      # - name: Deploy Frontend
-      #   uses: ./.github/actions/deploy-frontend
-      #   with:
-      #     s3_bucket_name: ${{ steps.apply-remaining.outputs.s3_bucket_name }}
-      #     cloudfront_distribution_id: ${{ steps.apply-remaining.outputs.cloudfront_distribution_id }}
+      # Deploy frontend placeholder to S3 and invalidate CloudFront cache.
+      # This uses the CloudFront default *.cloudfront.net domain (no custom domain / HTTPS required).
+      # Flip use_custom_domain to true in variables.tf once the ACM cert is validated.
+      - name: Deploy Frontend
+        uses: ./.github/actions/deploy-frontend
+        with:
+          s3_bucket_name: ${{ steps.apply-remaining.outputs.s3_bucket_name }}
+          cloudfront_distribution_id: ${{ steps.apply-remaining.outputs.cloudfront_distribution_id }}
