@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "profile_pictures" {
-  bucket = var.env == "prod" ? "car-agent-profile-pictures-prod" : "car-agent-profile-pictures-dev"
+  bucket = var.env == "prod" ? "car-agent-profile-pictures" : "car-agent-profile-pictures-dev"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "profile_pictures" {

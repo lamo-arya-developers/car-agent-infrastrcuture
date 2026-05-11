@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "table" {
-  name         = var.env == "prod" ? "stripe-events-prod" : "stripe-events-dev"
+  name         = var.env == "prod" ? "stripe-events" : "stripe-events-dev"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "event_id"
 

@@ -6,7 +6,7 @@ locals {
 
 # OAC — lets CloudFront authenticate to S3 without making the bucket public
 resource "aws_cloudfront_origin_access_control" "s3" {
-  name                              = var.env == "prod" ? "car-agent-s3-oac-prod" : "car-agent-s3-oac-dev"
+  name                              = var.env == "prod" ? "car-agent-s3-oac" : "car-agent-s3-oac-dev"
   description                       = "OAC allowing CloudFront to read from the car-agent S3 bucket"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -39,7 +39,7 @@ resource "aws_s3_bucket_policy" "cloudfront_access" {
 
 resource "aws_cloudfront_distribution" "main" {
   enabled = true
-  comment = var.env == "prod" ? "car-agent-distribution-prod" : "car-agent-distribution-dev"
+  comment = var.env == "prod" ? "car-agent-distribution" : "car-agent-distribution-dev"
   # Aliases are only valid with a matching ACM cert — keep this empty during the HTTP bootstrap phase
   aliases             = var.use_custom_domain ? [var.domain_name] : []
   default_root_object = "index.html"

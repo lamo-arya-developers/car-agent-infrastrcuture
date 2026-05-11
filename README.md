@@ -136,19 +136,19 @@ The `deploy-frontend` step checks whether the S3 bucket already contains objects
 
 ## Key design decisions
 
-| Decision | Reason |
-|---|---|
-| All resources in `eu-north-1` | GDPR data residency — personal data stays in Sweden |
-| ACM cert in `us-east-1` | AWS hard requirement for CloudFront certificates |
-| No VPC | Fully serverless; all traffic is HTTPS; no security benefit at this scale |
-| Shared Lambda IAM role | Auth, orchestrator, deletion and stripe have identical needs; profile lambda has its own role due to S3 access |
-| `PAY_PER_REQUEST` on DynamoDB | No traffic baseline yet — eliminates over/under-provisioning risk |
-| PITR on all tables | GDPR Article 32 — ability to restore personal data after accidental loss |
-| CloudTrail on DynamoDB | Audit log of every write to personal-data tables — GDPR Article 30 records of processing |
-| SES `ses:*` scoped to resource ARNs | Admin access to SES but locked to this app's domain identity and contact list only |
-| Profile lambda dedicated IAM role | Only lambda that needs S3 access — isolated to prevent other lambdas inheriting bucket permissions |
-| ECR `MUTABLE` tags | CI pushes `:latest` on every deploy; acceptable for a single-environment MVP |
-| Presigned S3 URLs for profile pictures | Binary data never passes through Lambda — client uploads directly to S3 |
+| Decision                               | Reason                                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| All resources in `eu-north-1`          | GDPR data residency — personal data stays in Sweden                                                            |
+| ACM cert in `us-east-1`                | AWS hard requirement for CloudFront certificates                                                               |
+| No VPC                                 | Fully serverless; all traffic is HTTPS; no security benefit at this scale                                      |
+| Shared Lambda IAM role                 | Auth, orchestrator, deletion and stripe have identical needs; profile lambda has its own role due to S3 access |
+| `PAY_PER_REQUEST` on DynamoDB          | No traffic baseline yet — eliminates over/under-provisioning risk                                              |
+| PITR on all tables                     | GDPR Article 32 — ability to restore personal data after accidental loss                                       |
+| CloudTrail on DynamoDB                 | Audit log of every write to personal-data tables — GDPR Article 30 records of processing                       |
+| SES `ses:*` scoped to resource ARNs    | Admin access to SES but locked to this app's domain identity and contact list only                             |
+| Profile lambda dedicated IAM role      | Only lambda that needs S3 access — isolated to prevent other lambdas inheriting bucket permissions             |
+| ECR `MUTABLE` tags                     | CI pushes `:latest` on every deploy; acceptable for a single-environment MVP                                   |
+| Presigned S3 URLs for profile pictures | Binary data never passes through Lambda — client uploads directly to S3                                        |
 
 ---
 
@@ -156,7 +156,7 @@ The `deploy-frontend` step checks whether the S3 bucket already contains objects
 
 Secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OIDC_ROLE_ARN`) live in GitHub Actions Secrets — never in the repo. Non-secret values go in `<env>.tfvars`. The pipeline injects the correct file automatically via `-var-file=<env>.tfvars`.
 
-| Resource naming | Pattern |
-|---|---|
-| Production | `car-agent-*-prod` |
-| Development | `car-agent-*-dev` |
+| Resource naming | Pattern           |
+| --------------- | ----------------- |
+| Production      | `car-agent`       |
+| Development     | `car-agent-*-dev` |

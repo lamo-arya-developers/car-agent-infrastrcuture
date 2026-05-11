@@ -8,7 +8,7 @@ data "aws_iam_openid_connect_provider" "github" {
 # Trust policy — allows GitHub Actions in the application repo to assume this role
 # via OIDC (no long-lived AWS credentials stored in GitHub).
 resource "aws_iam_role" "cicd_frontend" {
-  name = "car-agent-cicd-frontend-${var.env}"
+  name = var.env == "prod" ? "car-agent-cicd-frontend" : "car-agent-cicd-frontend-dev"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,7 +38,7 @@ resource "aws_iam_role" "cicd_frontend" {
 
 # Permission policy — least-privilege: only the two operations the deploy action needs.
 resource "aws_iam_role_policy" "cicd_frontend" {
-  name = "car-agent-cicd-frontend-policy-${var.env}"
+  name = var.env == "prod" ? "car-agent-cicd-frontend-policy" : "car-agent-cicd-frontend-policy-dev"
   role = aws_iam_role.cicd_frontend.id
 
   policy = jsonencode({

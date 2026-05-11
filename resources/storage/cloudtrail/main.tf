@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 
 # Dedicated S3 bucket for CloudTrail audit logs — kept separate from application data
 resource "aws_s3_bucket" "cloudtrail" {
-  bucket = var.env == "prod" ? "car-agent-cloudtrail-logs-prod" : "car-agent-cloudtrail-logs-dev"
+  bucket = var.env == "prod" ? "car-agent-cloudtrail-logs" : "car-agent-cloudtrail-logs-dev"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail" {
@@ -65,13 +65,13 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
 
 # CloudWatch Log Group — 1 year retention for GDPR audit accountability (Article 5(2))
 resource "aws_cloudwatch_log_group" "cloudtrail" {
-  name              = var.env == "prod" ? "/aws/cloudtrail/car-agent-prod" : "/aws/cloudtrail/car-agent-dev"
+  name              = var.env == "prod" ? "/aws/cloudtrail/car-agent" : "/aws/cloudtrail/car-agent-dev"
   retention_in_days = 365
 }
 
 # IAM role allowing CloudTrail to write to the CloudWatch log group
 resource "aws_iam_role" "cloudtrail_cloudwatch" {
-  name = var.env == "prod" ? "car-agent-cloudtrail-cw-prod" : "car-agent-cloudtrail-cw-dev"
+  name = var.env == "prod" ? "car-agent-cloudtrail-cw" : "car-agent-cloudtrail-cw-dev"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -86,7 +86,7 @@ resource "aws_iam_role" "cloudtrail_cloudwatch" {
 }
 
 resource "aws_iam_role_policy" "cloudtrail_cloudwatch" {
-  name = var.env == "prod" ? "car-agent-cloudtrail-cw-policy-prod" : "car-agent-cloudtrail-cw-policy-dev"
+  name = var.env == "prod" ? "car-agent-cloudtrail-cw-policy" : "car-agent-cloudtrail-cw-policy-dev"
   role = aws_iam_role.cloudtrail_cloudwatch.id
 
   policy = jsonencode({
@@ -103,7 +103,7 @@ resource "aws_iam_role_policy" "cloudtrail_cloudwatch" {
 }
 
 resource "aws_cloudtrail" "main" {
-  name           = var.env == "prod" ? "car-agent-trail-prod" : "car-agent-trail-dev"
+  name           = var.env == "prod" ? "car-agent-trail" : "car-agent-trail-dev"
   s3_bucket_name = aws_s3_bucket.cloudtrail.id
 
   # Real-time log delivery to CloudWatch for monitoring and alerting
