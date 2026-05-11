@@ -5,6 +5,10 @@ data "aws_region" "current" {}
 # Dedicated S3 bucket for CloudTrail audit logs — kept separate from application data
 resource "aws_s3_bucket" "cloudtrail" {
   bucket = var.env == "prod" ? "car-agent-cloudtrail-logs" : "car-agent-cloudtrail-logs-dev"
+  # Versioning is enabled on this bucket — without force_destroy Terraform refuses to delete it
+  # because all versioned objects (including delete markers) must be purged first.
+  # Terraform handles that automatically when this flag is set.
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail" {

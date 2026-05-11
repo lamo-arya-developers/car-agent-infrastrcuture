@@ -1,6 +1,7 @@
 resource "aws_s3_bucket" "bucket" {
   bucket = var.env == "prod" ? "car-ai-agent-bucket" : "car-ai-agent-bucket-dev"
   # S3 bucket for car AI agent's frontend application files.
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "bucket" {

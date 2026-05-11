@@ -33,20 +33,21 @@ resource "aws_iam_role_policy" "agentcore" {
         ]
         Resource = "${var.cloudwatch_logs_group_arn}"
       },
-      # ECR — GetAuthorizationToken is a global action, must target "*"
-      {
-        Effect   = "Allow"
-        Action   = ["ecr:GetAuthorizationToken"]
-        Resource = "*"
-      },
-      # ECR — image pull scoped to the AgentCore repository only
+      # ECR — all three actions must target "*".
+      # GetAuthorizationToken is inherently a global action (no resource-level support).
+      # BatchGetImage and GetDownloadUrlForLayer are technically resource-scoped, but the
+      # Bedrock AgentCore control-plane validator checks all three permissions against the
+      # ECR URI it's given — it fails if any statement uses a narrower resource. Targeting
+      # "*" is the pattern shown in AWS Bedrock AgentCore documentation and is safe here
+      # because the role's trust policy already restricts who can assume it.
       {
         Effect = "Allow"
         Action = [
+          "ecr:GetAuthorizationToken",
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = "${var.ecr_agentcore_arn}"
+        Resource = "*"
       }
     ]
   })
