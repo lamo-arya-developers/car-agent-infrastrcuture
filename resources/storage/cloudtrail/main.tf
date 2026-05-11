@@ -29,11 +29,13 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail" {
   restrict_public_buckets = true
 }
 
-# Versioning prevents log tampering — if a log object is overwritten, the original is retained
+# AWS does not allow reverting versioning from Enabled → Disabled.
+# Suspended stops new versions from being created while preserving existing ones
+# — the closest AWS permits once versioning has been turned on.
 resource "aws_s3_bucket_versioning" "cloudtrail" {
   bucket = aws_s3_bucket.cloudtrail.id
   versioning_configuration {
-    status = "Disabled"
+    status = "Suspended"
   }
 }
 

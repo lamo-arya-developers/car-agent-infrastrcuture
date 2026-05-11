@@ -91,6 +91,15 @@ resource "aws_cognito_identity_provider" "google" {
     name     = "name"
     picture  = "picture"
   }
+
+  lifecycle {
+    # AWS auto-populates read-only fields (attributes_url, authorize_url, oidc_issuer,
+    # token_url, etc.) after creation. Terraform sees these as drift and tries to remove
+    # them on every plan, causing a perpetual diff. Ignoring provider_details changes
+    # prevents that — our three managed keys (client_id, client_secret, authorize_scopes)
+    # are still set correctly on creation.
+    ignore_changes = [provider_details]
+  }
 }
 
 #resource "aws_cognito_identity_provider" "facebook" {
