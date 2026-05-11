@@ -33,7 +33,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail" {
 resource "aws_s3_bucket_versioning" "cloudtrail" {
   bucket = aws_s3_bucket.cloudtrail.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
 }
 
