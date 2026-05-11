@@ -139,6 +139,17 @@ module "iam_profile_lambda" {
   dynamodb_user_arn         = module.dynamodb_user.table_arn
   s3_profile_pictures_arn   = module.s3_profile_pictures.s3_arn
 }
+# OIDC role assumed by GitHub Actions in the application repo to deploy the frontend.
+# Grants only s3:sync + cloudfront:CreateInvalidation — no long-lived credentials in GitHub.
+module "iam_cicd_frontend" {
+  source                      = "./resources/security/iam-cicd-frontend"
+  env                         = var.environment
+  s3_bucket_arn               = module.s3.s3_arn
+  cloudfront_distribution_arn = module.cloudfront.cloudfront_distribution_arn
+  github_org                  = var.github_org
+  github_repo                 = var.github_repo
+  # github_ref defaults to "ref:refs/heads/main" — only the main branch can deploy
+}
 
 #### COMPUTE RESOURCES ####
 module "orchestrator_lambda" {

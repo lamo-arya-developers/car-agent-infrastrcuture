@@ -39,6 +39,12 @@ output "cloudfront_distribution_id" {
   description = "used in CI/CD to invalidate the CloudFront cache after a frontend deploy"
 }
 
+output "cicd_frontend_role_arn" {
+  value       = module.iam_cicd_frontend.cicd_frontend_role_arn
+  sensitive   = true
+  description = "ARN of the OIDC IAM role for the application repo CI/CD — add as FRONTEND_DEPLOY_ROLE_ARN secret in the app repo's GitHub Actions settings"
+}
+
 # Visit this in a browser to load the site while the custom domain isn't live yet.
 # Works over both http:// and https:// because viewer_protocol_policy = allow-all when use_custom_domain = false.
 output "cloudfront_domain_name" {

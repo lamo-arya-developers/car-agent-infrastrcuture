@@ -27,6 +27,20 @@ variable "use_custom_domain" {
   default     = false
 }
 
+# GitHub identity for the application repo — used by the iam-cicd-frontend module
+# to scope the OIDC trust policy to the correct repo.
+variable "github_org" {
+  description = "GitHub organisation or username that owns the application repo (e.g. 'my-org')"
+  type        = string
+  sensitive   = false
+}
+
+variable "github_repo" {
+  description = "name of the application GitHub repository whose Actions will assume the frontend deploy role (e.g. 'car-agent-frontend')"
+  type        = string
+  sensitive   = false
+}
+
 #variable "facebook_app_id" {
 #  description = "this is the Facebook app ID"
 #  type      = string
