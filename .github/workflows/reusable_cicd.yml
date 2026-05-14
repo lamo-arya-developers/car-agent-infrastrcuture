@@ -165,7 +165,6 @@ jobs:
             -target=module.dynamodb_car \
             -target=module.dynamodb_user \
             -target=module.dynamodb_stripe \
-            # -target=module.ses \          # uncomment once domain is validated and NS delegation is done
             -target=module.cloudwatch \
             -target=module.cognito \
             -target=module.iam_lambda \
