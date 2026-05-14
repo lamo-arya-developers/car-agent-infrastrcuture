@@ -6,7 +6,9 @@ resource "aws_cognito_user_pool" "agent" {
   deletion_protection      = "ACTIVE"
 
   admin_create_user_config {
-    allow_admin_create_user_only = false
+    # dev: only admins can create users — blocks public self-registration
+    # prod: anyone can register
+    allow_admin_create_user_only = var.env == "prod" ? false : true
   }
 
   password_policy {
@@ -66,6 +68,15 @@ resource "aws_cognito_user_pool" "agent" {
 
   user_pool_add_ons {
     advanced_security_mode = "ENFORCED"
+  }
+
+  # Pre-sign-up trigger — only attached in dev (when lambda ARN is provided)
+  # Blocks any email not on the allowlist, including Google OAuth sign-ins
+  dynamic "lambda_config" {
+    for_each = var.pre_signup_lambda_arn != null ? [1] : []
+    content {
+      pre_sign_up = var.pre_signup_lambda_arn
+    }
   }
 }
 
@@ -168,4 +179,15 @@ resource "aws_cognito_user_pool_client" "agent" {
     aws_cognito_identity_provider.google
     #    aws_cognito_identity_provider.facebook
   ]
+}
+
+# Grants Cognito permission to invoke the pre-sign-up Lambda
+# Only created when a Lambda ARN is provided (dev only)
+resource "aws_lambda_permission" "cognito_presignup" {
+  count         = var.pre_signup_lambda_arn != null ? 1 : 0
+  statement_id  = "AllowCognitoInvokePresignup"
+  action        = "lambda:InvokeFunction"
+  function_name = var.pre_signup_lambda_arn
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.agent.arn
 }

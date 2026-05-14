@@ -10,6 +10,12 @@ variable "domain_name" {
   sensitive   = false
 }
 
+variable "allowed_emails" {
+  description = "emails permitted to sign up — only enforced in dev via the pre-sign-up Lambda trigger, ignored in prod"
+  type        = list(string)
+  default     = []
+}
+
 variable "google_client_id" {
   description = "this is the Google client ID"
   type        = string
