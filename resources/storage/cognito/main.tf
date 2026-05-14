@@ -73,7 +73,7 @@ resource "aws_cognito_user_pool" "agent" {
   # Pre-sign-up trigger — only attached in dev (when lambda ARN is provided)
   # Blocks any email not on the allowlist, including Google OAuth sign-ins
   dynamic "lambda_config" {
-    for_each = var.pre_signup_lambda_arn != null ? [1] : []
+    for_each = var.env == "prod" ? [] : [1]
     content {
       pre_sign_up = var.pre_signup_lambda_arn
     }
@@ -184,7 +184,7 @@ resource "aws_cognito_user_pool_client" "agent" {
 # Grants Cognito permission to invoke the pre-sign-up Lambda
 # Only created when a Lambda ARN is provided (dev only)
 resource "aws_lambda_permission" "cognito_presignup" {
-  count         = var.pre_signup_lambda_arn != null ? 1 : 0
+  count         = var.env == "prod" ? 0 : 1
   statement_id  = "AllowCognitoInvokePresignup"
   action        = "lambda:InvokeFunction"
   function_name = var.pre_signup_lambda_arn
