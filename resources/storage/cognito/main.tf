@@ -140,13 +140,13 @@ resource "aws_cognito_user_pool_client" "agent" {
   callback_urls = var.env == "prod" ? [
     "https://www.xn--bilkpshjlpen-ncb1w.se/auth/callback",
     "https://xn--bilkpshjlpen-ncb1w.se/auth/callback"
-  ] : [
+    ] : [
     "https://dev.xn--bilkpshjlpen-ncb1w.se/auth/callback"
   ]
   logout_urls = var.env == "prod" ? [
     "https://www.xn--bilkpshjlpen-ncb1w.se",
     "https://xn--bilkpshjlpen-ncb1w.se"
-  ] : [
+    ] : [
     "https://dev.xn--bilkpshjlpen-ncb1w.se"
   ]
   token_validity_units {
