@@ -140,13 +140,13 @@ resource "aws_cognito_user_pool_client" "agent" {
   callback_urls = var.env == "prod" ? [
     "https://www.${var.domain_name}/auth/callback",
     "https://${var.domain_name}/auth/callback"
-  ] : [
+    ] : [
     "https://${var.domain_name}/auth/callback"
   ]
   logout_urls = var.env == "prod" ? [
     "https://www.${var.domain_name}",
     "https://${var.domain_name}"
-  ] : [
+    ] : [
     "https://${var.domain_name}"
   ]
   token_validity_units {

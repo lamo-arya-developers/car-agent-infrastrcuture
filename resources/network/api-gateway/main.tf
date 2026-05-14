@@ -11,7 +11,7 @@ resource "aws_apigatewayv2_api" "agent" {
     allow_origins = var.env == "prod" ? [
       "https://www.${var.domain_name}",
       "https://${var.domain_name}",
-    ] : [
+      ] : [
       "https://${var.domain_name}"
     ]
     allow_methods     = ["GET", "POST", "OPTIONS"]
