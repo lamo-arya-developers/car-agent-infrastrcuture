@@ -82,13 +82,22 @@ module "cloudtrail" {
     module.dynamodb_stripe.table_arn
   ]
 }
+# Pre-sign-up Lambda — dev only (count = 0 in prod so it never runs there)
+module "presignup_lambda" {
+  count  = var.environment == "prod" ? 0 : 1
+  source = "./resources/compute/presignup-lambda"
+
+  allowed_emails = var.allowed_emails
+}
+
 module "cognito" {
   source = "./resources/storage/cognito"
 
-  env                  = var.environment
-  domain_name          = var.domain_name
-  google_client_id     = var.google_client_id
-  google_client_secret = var.google_client_secret
+  env                   = var.environment
+  domain_name           = var.domain_name
+  pre_signup_lambda_arn = var.environment == "prod" ? null : module.presignup_lambda[0].lambda_arn
+  google_client_id      = var.google_client_id
+  google_client_secret  = var.google_client_secret
   #facebook_app_id = var.facebook_app_id         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
   #facebook_app_secret = var.facebook_app_secret --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 }

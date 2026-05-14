@@ -11,6 +11,13 @@ variable "domain_name" {
   sensitive   = false
 }
 
+variable "pre_signup_lambda_arn" {
+  description = "ARN of the pre-sign-up Lambda trigger — null in prod (open registration), set in dev to enforce the email allowlist"
+  type        = string
+  default     = null
+  sensitive   = false
+}
+
 variable "google_client_id" {
   description = "this is the Google client ID"
   type        = string
