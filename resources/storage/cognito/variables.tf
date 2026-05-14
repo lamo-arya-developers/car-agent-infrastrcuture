@@ -5,6 +5,12 @@ variable "env" {
   sensitive   = true
 }
 
+variable "domain_name" {
+  description = "the domain for this environment — used for Cognito callback and logout URLs"
+  type        = string
+  sensitive   = false
+}
+
 variable "google_client_id" {
   description = "this is the Google client ID"
   type        = string

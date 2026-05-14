@@ -138,16 +138,16 @@ resource "aws_cognito_user_pool_client" "agent" {
   allowed_oauth_flows_user_pool_client = true
 
   callback_urls = var.env == "prod" ? [
-    "https://www.xn--bilkpshjlpen-ncb1w.se/auth/callback",
-    "https://xn--bilkpshjlpen-ncb1w.se/auth/callback"
-    ] : [
-    "https://dev.xn--bilkpshjlpen-ncb1w.se/auth/callback"
+    "https://www.${var.domain_name}/auth/callback",
+    "https://${var.domain_name}/auth/callback"
+  ] : [
+    "https://${var.domain_name}/auth/callback"
   ]
   logout_urls = var.env == "prod" ? [
-    "https://www.xn--bilkpshjlpen-ncb1w.se",
-    "https://xn--bilkpshjlpen-ncb1w.se"
-    ] : [
-    "https://dev.xn--bilkpshjlpen-ncb1w.se"
+    "https://www.${var.domain_name}",
+    "https://${var.domain_name}"
+  ] : [
+    "https://${var.domain_name}"
   ]
   token_validity_units {
     access_token  = "minutes"

@@ -4,6 +4,12 @@ variable "environment" {
   sensitive   = true
 }
 
+variable "domain_name" {
+  description = "the domain for this environment — apex for prod (xn--bilkpshjlpen-ncb1w.se), subdomain for dev (dev.xn--bilkpshjlpen-ncb1w.se)"
+  type        = string
+  sensitive   = false
+}
+
 variable "google_client_id" {
   description = "this is the Google client ID"
   type        = string

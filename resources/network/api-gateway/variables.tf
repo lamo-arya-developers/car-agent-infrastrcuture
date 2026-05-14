@@ -5,6 +5,12 @@ variable "env" {
   sensitive   = true
 }
 
+variable "domain_name" {
+  description = "the domain for this environment — used for CORS allow_origins"
+  type        = string
+  sensitive   = false
+}
+
 variable "auth_lambda_invoke_arn" {
   description = "this is the auth lambda's invoke ARN"
   type        = string

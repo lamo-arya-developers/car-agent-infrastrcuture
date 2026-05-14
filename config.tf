@@ -86,6 +86,7 @@ module "cognito" {
   source = "./resources/storage/cognito"
 
   env                  = var.environment
+  domain_name          = var.domain_name
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
   #facebook_app_id = var.facebook_app_id         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
@@ -94,7 +95,7 @@ module "cognito" {
 module "ses" {
   source      = "./resources/storage/ses"
   env         = var.environment
-  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+  domain_name = var.domain_name
   zone_id     = module.route53.zone_id
 }
 
@@ -216,6 +217,7 @@ module "api_gateway" {
   source = "./resources/network/api-gateway"
 
   env                               = var.environment
+  domain_name                       = var.domain_name
   auth_lambda_invoke_arn            = module.auth_lambda.lambda_inv_arn
   orchestrator_lambda_invoke_arn    = module.orchestrator_lambda.lambda_inv_arn
   deletion_lambda_invoke_arn        = module.deletion_lambda.lambda_inv_arn
@@ -233,7 +235,7 @@ module "api_gateway" {
 module "route53" {
   source      = "./resources/network/route53"
   env         = var.environment
-  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+  domain_name = var.domain_name
 }
 # Skipped while use_custom_domain = false — ACM validation would block apply forever
 # if the registrar's NS records don't point at Route53 yet.
@@ -241,7 +243,7 @@ module "acm" {
   count       = var.use_custom_domain ? 1 : 0
   source      = "./resources/network/acm"
   env         = var.environment
-  domain_name = "xn--bilkpshjlpen-ncb1w.se"
+  domain_name = var.domain_name
   zone_id     = module.route53.zone_id
 
   # ACM certs for CloudFront must live in us-east-1 regardless of the main provider region
@@ -256,7 +258,7 @@ module "cloudfront" {
   use_custom_domain = var.use_custom_domain
   # The custom-domain inputs below are only consumed by the cloudfront module
   # when use_custom_domain = true; otherwise they're ignored.
-  domain_name                    = var.use_custom_domain ? "xn--bilkpshjlpen-ncb1w.se" : null
+  domain_name                    = var.use_custom_domain ? var.domain_name : null
   zone_id                        = var.use_custom_domain ? module.route53.zone_id : null
   certificate_arn                = var.use_custom_domain ? module.acm[0].certificate_arn : null
   api_gateway_endpoint           = module.api_gateway.api_gateway_endpoint

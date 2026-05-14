@@ -8,9 +8,11 @@ resource "aws_apigatewayv2_api" "agent" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = [
-      "https://www.xn--bilkpshjlpen-ncb1w.se",
-      "https://xn--bilkpshjlpen-ncb1w.se",
+    allow_origins = var.env == "prod" ? [
+      "https://www.${var.domain_name}",
+      "https://${var.domain_name}",
+    ] : [
+      "https://${var.domain_name}"
     ]
     allow_methods     = ["GET", "POST", "OPTIONS"]
     allow_headers     = ["Authorization", "Content-Type"]
