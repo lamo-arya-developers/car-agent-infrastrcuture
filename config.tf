@@ -1,12 +1,7 @@
 
 terraform {
   required_version = ">=1.14.0"
-  backend "s3" {
-    bucket  = "bilkpshjalpen-tfstate-files"
-    key     = "product/car-agent/poc/terraform.tfstate"
-    region  = "eu-north-1"
-    encrypt = true
-  }
+  backend "s3" {}
 
   required_providers {
     aws = {
@@ -91,8 +86,8 @@ module "cognito" {
   source = "./resources/storage/cognito"
 
   env                  = var.environment
-  google_client_id     = var.environment == "prod" ? var.google_client_id : "${var.google_client_id}-dev"
-  google_client_secret = var.environment == "prod" ? var.google_client_secret : "${var.google_client_secret}-dev"
+  google_client_id     = var.google_client_id
+  google_client_secret = var.google_client_secret
   #facebook_app_id = var.facebook_app_id         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
   #facebook_app_secret = var.facebook_app_secret --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 }
@@ -227,8 +222,8 @@ module "api_gateway" {
   auth_lambda_function_name         = module.auth_lambda.lambda_function_name
   orchestrator_lambda_function_name = module.orchestrator_lambda.lambda_function_name
   deletion_lambda_function_name     = module.deletion_lambda.lambda_function_name
-  cognito_user_pool_id              = var.environment == "prod" ? module.cognito.cognito_user_pool_id : "${module.cognito.cognito_user_pool_id}-dev"
-  cognito_user_pool_client_id       = var.environment == "prod" ? module.cognito.cognito_user_pool_client_id : "${module.cognito.cognito_user_pool_client_id}-dev"
+  cognito_user_pool_id              = module.cognito.cognito_user_pool_id
+  cognito_user_pool_client_id       = module.cognito.cognito_user_pool_client_id
   cloudwatch_log_group_arn          = module.cloudwatch.cloudwatch_log_group_arn
   stripe_lambda_invoke_arn          = module.stripe_lambda.lambda_inv_arn
   stripe_lambda_function_name       = module.stripe_lambda.lambda_function_name

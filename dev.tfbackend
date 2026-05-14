@@ -1,0 +1,4 @@
+bucket  = "bilkpshjalpen-tfstate-files"
+key     = "product/car-agent/poc/dev/terraform.tfstate"
+region  = "eu-north-1"
+encrypt = true

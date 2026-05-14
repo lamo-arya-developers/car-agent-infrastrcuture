@@ -1,12 +1,12 @@
-name: Prod Terraform CI/CD
+name: Dev Terraform CI/CD
 
 on:
   push:
     branches:
-      - main
+      - dev
   pull_request:
     branches:
-      - main
+      - dev
 
 jobs:
   terraform:
@@ -14,11 +14,11 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      
+
     with:
       working_directory: .
-      environment: prod
+      environment: dev
     secrets:
-      OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN }}
+      OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN_DEV }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
