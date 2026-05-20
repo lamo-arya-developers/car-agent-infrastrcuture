@@ -1,5 +1,6 @@
 
 # Packages the allowlist check as a zip from inline Python — no ECR needed for this tiny function
+# this lambda is used ONLY in dev environment and its to validate Arya and Lamo only in dev. Meaning this lambda will only be deployed in dev (not to prod).
 data "archive_file" "presignup" {
   type        = "zip"
   output_path = "${path.module}/presignup.zip"

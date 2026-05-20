@@ -39,3 +39,14 @@ variable "ses_contact_list_name" {
   type        = string
   sensitive   = false
 }
+
+variable "publishable_key" {
+  description = "this is part of the API credentials to validate a user's API call"
+  type        = string
+  sensitive   = true
+}
+variable "secret_key" {
+  description = "this is part of the API credentials to validate a user's API call (sercret value)"
+  type        = string
+  sensitive   = true
+}

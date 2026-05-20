@@ -15,6 +15,10 @@ on:
         required: true
       GOOGLE_CLIENT_SECRET:
         required: true
+      ORIGIN_PUBLISHABLE_KEY:
+        required: true
+      ORIGIN_SECRET_KEY:
+        required: true
       # FACEBOOK_APP_ID:
       #   required: true
       # FACEBOOK_APP_SECRET:
@@ -64,6 +68,8 @@ jobs:
           environment: ${{ inputs.environment }}
           google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          origin_publishable_key: ${{ secrets.ORIGIN_PUBLISHABLE_KEY }}
+          origin_secret_key: ${{ secrets.ORIGIN_SECRET_KEY }}
           # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
           # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 
@@ -75,6 +81,8 @@ jobs:
           environment: ${{ inputs.environment }}
           google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          origin_publishable_key: ${{ secrets.ORIGIN_PUBLISHABLE_KEY }}
+          origin_secret_key: ${{ secrets.ORIGIN_SECRET_KEY }}
           # facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }}         --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
           # facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
 
@@ -157,6 +165,8 @@ jobs:
         env:
           TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TF_VAR_origin_publishable_key: ${{ secrets.ORIGIN_PUBLISHABLE_KEY }}
+          TF_VAR_origin_secret_key: ${{ secrets.ORIGIN_SECRET_KEY }}
           # TF_VAR_facebook_app_id: ${{ secrets.FACEBOOK_APP_ID }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
           # TF_VAR_facebook_app_secret: ${{ secrets.FACEBOOK_APP_SECRET }} --- NOT NECESSARY FOR MVP, COMMENTING OUT FOR NOW ---
         run: |

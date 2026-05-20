@@ -18,10 +18,12 @@ resource "aws_lambda_function" "stripe" {
 
   environment {
     variables = {
-      LOG_GROUP_NAME        = var.cloudwatch_log_group_name
-      STRIPE_TABLE_NAME     = var.dynamodb_stripe_name
-      USER_TABLE_NAME       = var.dynamodb_user_name
-      SES_CONTACT_LIST_NAME = var.ses_contact_list_name
+      LOG_GROUP_NAME         = var.cloudwatch_log_group_name
+      STRIPE_TABLE_NAME      = var.dynamodb_stripe_name
+      USER_TABLE_NAME        = var.dynamodb_user_name
+      SES_CONTACT_LIST_NAME  = var.ses_contact_list_name
+      STRIPE_PUBLISHABLE_KEY = var.publishable_key
+      STRIPE_SECRET_KEY      = var.secret_key
     }
   }
 }
