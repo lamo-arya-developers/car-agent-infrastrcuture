@@ -200,6 +200,8 @@ module "stripe_lambda" {
   dynamodb_stripe_name      = module.dynamodb_stripe.table_name
   dynamodb_user_name        = module.dynamodb_user.table_name
   ses_contact_list_name     = module.ses.contact_list_name
+  publishable_key           = var.origin_publishable_key
+  secret_key                = var.origin_secret_key
 }
 
 module "profile_lambda" {

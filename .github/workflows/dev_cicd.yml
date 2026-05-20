@@ -22,3 +22,5 @@ jobs:
       OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN_DEV }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      ORIGIN_PUBLISHABLE_KEY: ${{ secrets.PUBLISHABLE_KEY_DEV }}
+      ORIGIN_SECRET_KEY: ${{ secrets.SECRET_KEY_DEV }}

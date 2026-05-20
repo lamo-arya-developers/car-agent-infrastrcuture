@@ -55,6 +55,17 @@ variable "github_repo" {
   sensitive   = false
 }
 
+variable "origin_publishable_key" {
+  description = "this is part of the API credentials to validate a user's API call"
+  type        = string
+  sensitive   = true
+}
+variable "origin_secret_key" {
+  description = "this is part of the API credentials to validate a user's API call (sercret value)"
+  type        = string
+  sensitive   = true
+}
+
 #variable "facebook_app_id" {
 #  description = "this is the Facebook app ID"
 #  type      = string
